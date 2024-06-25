@@ -51,3 +51,5 @@ draft.py
 .idea
 .env
 .idea/
+media/
+.media/
