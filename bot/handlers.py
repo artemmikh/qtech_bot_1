@@ -61,11 +61,11 @@ def info_buttons_handler(update, context):
                                                   is_department=False).all()
 
     keyboard = [
-        [InlineKeyboardButton(button.name, callback_data=f'button_{button.id}')
-         for button in buttons],
-        [InlineKeyboardButton('К кому обращаться?',
-                              callback_data='department_button')]
+        [InlineKeyboardButton(button.name, callback_data=f'button_{button.id}')]
+        for button in buttons
     ]
+    keyboard.append([InlineKeyboardButton('К кому обращаться?',
+                                          callback_data=f'department_button_{query.data}')])
 
     reply_markup = InlineKeyboardMarkup(keyboard)
     query.edit_message_text(
@@ -88,17 +88,22 @@ def button_text_handler(update, context):
 
 
 def department_button_handler(update, context):
-    print(f'context - {context}')
+    """Обработчик кнопки 'К кому обращаться?'"""
     query = update.callback_query
     query.answer()
-    buttons = session.query(Button).filter_by(is_department=True).all()
-    print(f'buttons - {buttons}')
+
+    office_choice = query.data.split('_')[3]
+
+    if office_choice == 'yes':
+        buttons = session.query(Button).filter_by(is_moscow=True,
+                                                  is_department=True).all()
+    elif office_choice == 'no':
+        buttons = session.query(Button).filter_by(is_moscow=False,
+                                                  is_department=True).all()
 
     keyboard = [
-        [InlineKeyboardButton(
-            button.name,
-            callback_data=f'button_{button.id}') for button in buttons]
-    ]
+        [InlineKeyboardButton(button.name, callback_data=f'button_{button.id}')]
+        for button in buttons]
 
     reply_markup = InlineKeyboardMarkup(keyboard)
     query.edit_message_text(
