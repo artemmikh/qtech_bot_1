@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block content %}
+  <div>
+      <h1> {{ context.name }} </h1>
+      <p style="color:grey;">
+        Кнопка активирована: {{ context.is_active }}
+      </p>
+      <p style="color:grey;">
+        Кнопка для Москвы: {{ context.is_moscow }}
+      </p>
+      <p style="color:grey;">
+        Кнопка отдела: {{ context.is_department }}
+      </p>
+      <p style="color:grey;">
+        Текст по нажатию кнопки:
+      </p>
+      <p>
+        {{ context.text }}
+      </p>
+      <p>
+        {% if context.picture %}
+        <img src={{context.picture}} alt="Picture" width="1024" height="683">
+        {% endif %}
+      </p>
+      <p>
+        {% if context.file %}
+        <a href="/{{context.file}}" > 
+          Файл
+          </a>
+        {% endif %}
+      </p>
+    <a class="btn btn-default">
+      Удалить
+    </a>
+    <a class="btn btn-default">
+      Редактировать
+    </a>
+  </div>
+{% endblock content %}

@@ -15,7 +15,11 @@
         <tbody>
         <tr>
             <td>{{ item.is_active }}</td>
-            <td>{{ item.name }}</td>
+            <td>
+                <a href="/{{item.id}}" > 
+                {{ item.name }}
+                </a>
+            </td>
             <td>{{ item.is_department }}</td>
 
             <td>>>></td>
