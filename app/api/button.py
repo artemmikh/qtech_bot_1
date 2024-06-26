@@ -62,3 +62,15 @@ async def get_all_buttons(
 ):
     all_buttons = await button_crud.get_multi(session)
     return all_buttons
+
+
+@router.get(
+    '/api/{button_id}',
+    response_model=list[ButtonBase]
+)
+async def get_button_detail_by_id(
+        button_id: int,
+        session: AsyncSession = Depends(get_async_session),
+):
+    button_detail = await button_crud.get(button_id, session)
+    return button_detail
