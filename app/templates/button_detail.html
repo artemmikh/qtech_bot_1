@@ -9,16 +9,17 @@
         Кнопка для Москвы: {{ context.is_moscow }}
       </p>
       <p style="color:grey;">
-        Кнопка в иерархии департаментов: {{ context.is_department }}
+        Кнопка отдела: {{ context.is_department }}
+      </p>
+      <p style="color:grey;">
+        Текст по нажатию кнопки:
       </p>
       <p>
         {{ context.text }}
       </p>
       <p>
         {% if context.picture %}
-        <a href="/{{context.picture}}" > 
-          Картинка
-          </a>
+        <img src={{context.picture}} alt="Picture" width="1024" height="683">
         {% endif %}
       </p>
       <p>
