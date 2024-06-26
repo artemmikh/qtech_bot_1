@@ -40,8 +40,8 @@ async def post_button_form(name: str = Form(...),
                            text: str = Form(...),
                            is_department: bool = Form(...),
                            is_active: bool = Form(...),
-                           file_pic: UploadFile = None,
-                           file_doc: UploadFile = None,
+                           file_pic: list[UploadFile] = None,
+                           file_doc: list[UploadFile] = None,
                            session: AsyncSession = Depends(get_async_session),
                            ):
     await create_button(name=name,
@@ -62,6 +62,12 @@ async def get_button_detail(request: Request,
                             session: AsyncSession = Depends(get_async_session)
                             ):
     context = await get_button_detail_by_id(button_id, session)
+
+    if context.picture:
+        context.picture = context.picture.split(' ')
+
+    if context.file:
+        context.file = context.file.split(' ')
 
     return templates.TemplateResponse("button_detail.html",
                                       {"request": request,

@@ -19,21 +19,25 @@
       </p>
       <p>
         {% if context.picture %}
-        <img src={{context.picture}} alt="Picture" width="1024" height="683">
+          {% for pic in context.picture %}
+            <img src={{pic}} alt="Picture" width=20% class="img-thumbnail">
+          {% endfor %}
         {% endif %}
       </p>
       <p>
         {% if context.file %}
-        <a href="/{{context.file}}" > 
-          Файл
-          </a>
+          {% for doc in context.file %}
+            <a href="/{{doc}}" >
+              Файл
+            </a>
+          {% endfor %}
         {% endif %}
       </p>
+      <a class="btn btn-default">
+      Редактировать
+      </a>
     <a class="btn btn-default">
       Удалить
-    </a>
-    <a class="btn btn-default">
-      Редактировать
     </a>
   </div>
 {% endblock content %}
