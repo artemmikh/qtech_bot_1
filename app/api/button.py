@@ -7,6 +7,12 @@ from app.schemas.button import ButtonBase
 from app.core.db import get_async_session
 from app.crud.button import button_crud
 import os
+from pathlib import Path
+
+BASE_DIR = os.getcwd()
+DIR_PICS = '/app/static/media/pics/'
+DIR_FILES = '/app/static/media/docs/'
+
 
 router = APIRouter(
     tags=['API Bottons']
@@ -28,13 +34,15 @@ async def create_button(
         file_doc: UploadFile = File(...),
         session: AsyncSession = Depends(get_async_session),
 ):
+    Path(BASE_DIR + DIR_PICS).mkdir(parents=True, exist_ok=True)
     if file_pic.filename:
-        with open(current_working_directory + '/app/static/media/pics/' + file_pic.filename, 'wb') as image:
+        with open(BASE_DIR + DIR_PICS + file_pic.filename, 'wb') as image:
             shutil.copyfileobj(file_pic.file, image)
         picture = str(current_working_directory + '/app/static/media/pics/' + file_pic.filename)
     else:
         picture = None
 
+    Path(BASE_DIR + DIR_FILES).mkdir(parents=True, exist_ok=True)
     if file_doc.filename:
         with open(current_working_directory + '/app/static/media/docs/' + file_doc.filename, 'wb') as file:
             shutil.copyfileobj(file_doc.file, file)
