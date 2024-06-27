@@ -6,7 +6,8 @@ from starlette import status
 from starlette.responses import RedirectResponse
 
 from app.core.db import get_async_session
-from app.api.button import create_button, get_all_buttons
+from app.api.button import (create_button, get_all_buttons,
+                            get_button_detail_by_id)
 
 router = APIRouter(tags=['Render Bottons'])
 
@@ -39,8 +40,8 @@ async def post_button_form(name: str = Form(...),
                            text: str = Form(...),
                            is_department: bool = Form(...),
                            is_active: bool = Form(...),
-                           file_pic: UploadFile = None,
-                           file_doc: UploadFile = None,
+                           file_pic: list[UploadFile] = None,
+                           file_doc: list[UploadFile] = None,
                            session: AsyncSession = Depends(get_async_session),
                            ):
     await create_button(name=name,
@@ -53,3 +54,23 @@ async def post_button_form(name: str = Form(...),
                         session=session
                         )
     return RedirectResponse(router.url_path_for('render_all_buttons'), status_code=status.HTTP_303_SEE_OTHER)
+
+
+@router.get("/{button_id}", response_class=HTMLResponse)
+async def get_button_detail(request: Request,
+                            button_id: int,
+                            session: AsyncSession = Depends(get_async_session)
+                            ):
+    context = await get_button_detail_by_id(button_id, session)
+
+    if context.picture:
+        context.picture = context.picture.split(' ')
+
+    if context.file:
+        context.file = context.file.split(' ')
+
+    return templates.TemplateResponse("button_detail.html",
+                                      {"request": request,
+                                       "context": context,
+                                       }
+                                      )
