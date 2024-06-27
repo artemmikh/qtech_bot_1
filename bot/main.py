@@ -91,10 +91,10 @@ def main():
     dispatcher = updater.dispatcher
     dispatcher.add_handler(CommandHandler('start', start_handler))
     dispatcher.add_handler(CallbackQueryHandler(
-        moscow_office_handler(),
+        moscow_office_handler,
         pattern='^(new_employee|old_employee)$'))
     dispatcher.add_handler(
-        CallbackQueryHandler(info_buttons_handler(),
+        CallbackQueryHandler(info_buttons_handler,
                              pattern='^(moscow_yes|moscow_no)$'))
     updater.start_polling()
     updater.idle()
