@@ -1,7 +1,26 @@
+import re
+
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ParseMode
 
 from const import NEW_EMPLOYEE, OLD_EMPLOYEE, MOSCOW_NO, MOSCOW_YES
 from db import session, Button
+
+
+def clean_unsupported_tags_from_html(text):
+    """
+    Удаляет из HTML неподдерживаемые телеграмом
+    теги и заменяет теги переноса строк.
+    """
+    # Замена <p> на один перенос строки и удаление </p>
+    text = re.sub(r'<p[^>]*>', '\n', text)
+    text = re.sub(r'</p>', '', text)
+    # Замена &nbsp на один перенос строки
+    text = text.replace('&nbsp;', '')
+    # Замена br на один перенос строки
+    text = re.sub(r'<br\s*/?>', '\n', text)
+    # Удаление лишних пробелов и переносов строк
+    text = text.strip()
+    return text
 
 
 def start_handler(update, context):
@@ -83,8 +102,9 @@ def button_text_handler(update, context):
     button_id = int(query.data.split('_')[1])
     button = session.query(Button).filter_by(id=button_id).one_or_none()
 
-    message = button.text.replace('<p>', '').replace('</p>', '')
-    query.edit_message_text(text=message, parse_mode=ParseMode.HTML)
+    query.edit_message_text(
+        text=clean_unsupported_tags_from_html(button.text),
+        parse_mode=ParseMode.HTML)
 
 
 def department_button_handler(update, context):
