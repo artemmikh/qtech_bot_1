@@ -1,4 +1,5 @@
 import shutil
+from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -7,6 +8,7 @@ from app.schemas.button import ButtonBase, ButtonUpdate
 from app.core.db import get_async_session
 from app.crud.button import button_crud
 import os
+from pathlib import Path
 
 router = APIRouter(
     tags=['API Bottons']
@@ -24,23 +26,32 @@ async def create_button(
         text: str,
         is_department: bool,
         is_active: bool,
-        file_pic: UploadFile = File(...),
-        file_doc: UploadFile = File(...),
+        file_pic: list[UploadFile] = File(...),
+        file_doc: list[UploadFile] = File(...),
         session: AsyncSession = Depends(get_async_session),
 ):
-    if file_pic.filename:
-        with open(current_working_directory + '/app/static/media/pics/' + file_pic.filename, 'wb') as image:
-            shutil.copyfileobj(file_pic.file, image)
-        picture = str(current_working_directory + '/app/static/media/pics/' + file_pic.filename)
-    else:
-        picture = None
 
-    if file_doc.filename:
-        with open(current_working_directory + '/app/static/media/docs/' + file_doc.filename, 'wb') as file:
-            shutil.copyfileobj(file_doc.file, file)
-        file = str(current_working_directory + '/app/static/media/docs/' + file_doc.filename)
-    else:
-        file = None
+    picture = []
+    Path(current_working_directory + '/app/static/media/pics/').mkdir(parents=True, exist_ok=True)
+    for pic in file_pic:
+        if pic.filename:
+            filename = str(pic.filename).replace(' ', '_')
+            with open(current_working_directory + '/app/static/media/pics/' + filename, 'wb') as image:
+                shutil.copyfileobj(pic.file, image)
+            picture.append('static/media/pics/' + filename)
+
+    picture = ' '.join(picture)
+
+    item = []
+    Path(current_working_directory + '/app/static/media/docs/').mkdir(parents=True, exist_ok=True)
+    for doc in file_doc:
+        if doc.filename:
+            filename = str(doc.filename).replace(' ', '_')
+            with open(current_working_directory + '/app/static/media/docs/' + filename, 'wb') as file:
+                shutil.copyfileobj(doc.file, file)
+            item.append('static/media/docs/' + filename)
+
+    file = ' '.join(item)
 
     new_button = await button_crud.create_with_pic(name=name,
                                                    is_moscow=is_moscow,
@@ -62,6 +73,18 @@ async def get_all_buttons(
 ):
     all_buttons = await button_crud.get_multi(session)
     return all_buttons
+
+
+@router.get(
+    '/api/{button_id}',
+    response_model=list[ButtonBase]
+)
+async def get_button_detail_by_id(
+        button_id: int,
+        session: AsyncSession = Depends(get_async_session),
+):
+    button_detail = await button_crud.get(button_id, session)
+    return button_detail
 
 @router.patch('api/{button_id}',
     response_model=ButtonBase,
