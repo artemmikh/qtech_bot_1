@@ -1,4 +1,4 @@
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ParseMode
 
 from const import NEW_EMPLOYEE, OLD_EMPLOYEE, MOSCOW_NO, MOSCOW_YES
 from db import session, Button
@@ -83,8 +83,8 @@ def button_text_handler(update, context):
     button_id = int(query.data.split('_')[1])
     button = session.query(Button).filter_by(id=button_id).one_or_none()
 
-    message = button.text
-    query.edit_message_text(text=message)
+    message = button.text.replace('<p>', '').replace('</p>', '')
+    query.edit_message_text(text=message, parse_mode=ParseMode.HTML)
 
 
 def department_button_handler(update, context):
