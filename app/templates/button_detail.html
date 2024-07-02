@@ -27,17 +27,21 @@
       <p>
         {% if context.file %}
           {% for doc in context.file %}
-            <a href="/{{doc}}" >
+            <a href="/{{doc}}">
               Файл
             </a>
           {% endfor %}
         {% endif %}
       </p>
       <a class="btn btn-default">
-      Редактировать
+        Редактировать
       </a>
-    <a class="btn btn-default">
-      Удалить
-    </a>
+      {% if context.id %}
+      <h5>Удалить кнопку: {{ context.name }}?</h5>
+      <h7>Текст: {{ context.text }}</h7>
+      <form actions='delete_button_' method="post">
+          <button type="submit" class="btn btn-primary" >Удалить</button>
+      </form>
+      {% endif %}
   </div>
 {% endblock content %}

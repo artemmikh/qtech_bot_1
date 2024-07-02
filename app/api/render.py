@@ -1,13 +1,16 @@
-from fastapi import APIRouter, Request, Form, UploadFile, Depends, File
+from fastapi import APIRouter, Request, Form, UploadFile, Depends, File, status
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 from starlette.responses import RedirectResponse
+from typing import Annotated
 
 from app.core.db import get_async_session
-from app.api.button import (create_button, get_all_buttons,
-                            get_button_detail_by_id, delete_button)
+from app.api.button import (
+    create_button, get_all_buttons, get_button_detail_by_id,
+    delete_button
+)
 
 router = APIRouter(tags=['Render Bottons'])
 
@@ -62,12 +65,11 @@ async def get_button_detail(request: Request,
                             session: AsyncSession = Depends(get_async_session)
                             ):
     context = await get_button_detail_by_id(button_id, session)
+    if context and context.picture:
+        context.picture = context.picture.split(' ')[1:]
 
-    if context.picture:
-        context.picture = context.picture.split(' ')
-
-    if context.file:
-        context.file = context.file.split(' ')
+    if context and context.file:
+        context.file = context.file.split(' ')[1:]
 
     return templates.TemplateResponse("button_detail.html",
                                       {"request": request,
@@ -75,4 +77,20 @@ async def get_button_detail(request: Request,
                                        }
                                       )
 
-# delete button: В работе
+
+# test ok
+@router.post(
+    '/{button_id}',
+    response_class=HTMLResponse
+)
+async def delete_button_(
+    request: Request,
+    button_id: Annotated[int, Form()],
+    session: AsyncSession = Depends(get_async_session)
+):
+    await delete_button(button_id=button_id, session=session)
+
+    return templates.TemplateResponse(
+        'button_detail.html',
+        {'request': request, 'context': button_id}
+    )

@@ -18,10 +18,8 @@ class ButtonBase(BaseModel):
 """
 
 
-# test/only используется в удалении кнопки:
-# test delete ok
-class ButtonBase(BaseModel):
-    id: int  # add id: int
+class ButtonDatabase(BaseModel):
+    id: int
     name: str
     is_moscow: bool = True
     text: str
@@ -29,13 +27,12 @@ class ButtonBase(BaseModel):
     file: str = None
     is_department: bool = True
     is_active: bool = True
-    create_date: Optional[datetime] = (
+    created_date: Optional[datetime] = (
         Field(example=datetime.now().isoformat(timespec='minutes'))
     )
 
     class Config:
         orm_mode = True
-        anystr_strip_whitespace = True
 
 
 class ButtonCreation(BaseModel):
