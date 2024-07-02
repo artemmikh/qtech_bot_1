@@ -53,3 +53,4 @@ draft.py
 .idea/
 media/
 .media/
+**/**/__pycache__/
