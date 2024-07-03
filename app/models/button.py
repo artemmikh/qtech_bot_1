@@ -1,7 +1,7 @@
 from sqlalchemy import Column, String, Text, Boolean, DateTime
 from sqlalchemy_utils import URLType
 from app.core.db import Base
-import datetime
+from datetime import datetime
 
 
 class Button(Base):
@@ -11,6 +11,9 @@ class Button(Base):
     picture = Column(URLType, nullable=True)
     file = Column(URLType, nullable=True)
     is_department = Column(Boolean,  default=True)
-
     is_active = Column(Boolean, default=True)
-    created_date = Column(DateTime, default=datetime.datetime.utcnow)
+    # created_date = Column(DateTime, default=datetime.datetime.utcnow)
+    created_date = Column(DateTime, default=datetime.now)
+
+    def __repr__(self):
+        return f'Кнопка: {self.name}'
