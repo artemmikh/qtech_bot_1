@@ -22,8 +22,14 @@
             </td>
             <td>{{ item.is_department }}</td>
 
-            <td>>>></td>
-            <td>>>></td>
+            <td>
+               >>>
+            </td>
+            <td>
+                    <a href="{{ url_for('update_button_form', button_id=item.id) }}" >
+                    >>>
+                    </a>
+            </td>
         </tr>
         </tbody>
     {% endfor %}

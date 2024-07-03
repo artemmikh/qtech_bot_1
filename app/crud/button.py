@@ -2,6 +2,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.crud.base import CRUDBase
 from app.models.button import Button
+from sqlalchemy import update
 
 
 class CRUDButton(CRUDBase):
@@ -16,7 +17,6 @@ class CRUDButton(CRUDBase):
             is_active: bool,
             session: AsyncSession,
     ):
-
         db_obj = self.model(name=name,
                             is_moscow=is_moscow,
                             text=text,
