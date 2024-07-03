@@ -4,7 +4,7 @@ from typing import List
 from fastapi import APIRouter, Depends, UploadFile, File
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.schemas.button import ButtonBase
+from app.schemas.button import ButtonUpdate, ButtonBase
 from app.core.db import get_async_session
 from app.crud.button import button_crud
 import os
@@ -30,7 +30,6 @@ async def create_button(
         file_doc: list[UploadFile] = File(...),
         session: AsyncSession = Depends(get_async_session),
 ):
-
     picture = []
     Path(current_working_directory + '/app/static/media/pics/').mkdir(parents=True, exist_ok=True)
     for pic in file_pic:
@@ -38,7 +37,7 @@ async def create_button(
             filename = str(pic.filename).replace(' ', '_')
             with open(current_working_directory + '/app/static/media/pics/' + filename, 'wb') as image:
                 shutil.copyfileobj(pic.file, image)
-            picture.append('static/media/pics/' + filename)
+            picture.append('/static/media/pics/' + filename)
 
     picture = ' '.join(picture)
 
@@ -49,10 +48,9 @@ async def create_button(
             filename = str(doc.filename).replace(' ', '_')
             with open(current_working_directory + '/app/static/media/docs/' + filename, 'wb') as file:
                 shutil.copyfileobj(doc.file, file)
-            item.append('static/media/docs/' + filename)
+            item.append('/static/media/docs/' + filename)
 
     file = ' '.join(item)
-
 
     new_button = await button_crud.create_with_pic(name=name,
                                                    is_moscow=is_moscow,
@@ -86,3 +84,6 @@ async def get_button_detail_by_id(
 ):
     button_detail = await button_crud.get(button_id, session)
     return button_detail
+
+
+

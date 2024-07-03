@@ -20,21 +20,21 @@
       <p>
         {% if context.picture %}
           {% for pic in context.picture %}
-            <img src={{pic}} alt="Picture" width=20% class="img-thumbnail">
+            <img src='{{pic}}' alt="Picture" width=20% class="img-thumbnail">
           {% endfor %}
         {% endif %}
       </p>
       <p>
         {% if context.file %}
           {% for doc in context.file %}
-            <a href="/{{doc}}" >
+            <a href="{{doc}}" >
               Файл
             </a>
           {% endfor %}
         {% endif %}
       </p>
-      <a class="btn btn-default">
-      Редактировать
+      <a class="btn btn-default" href="{{ url_for('update_button_form', button_id=context.id) }}" >
+                Редактировать
       </a>
     <a class="btn btn-default">
       Удалить

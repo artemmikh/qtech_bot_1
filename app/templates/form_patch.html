@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block content %}
+
+<br>
+<div class="container">
+  <form class="form-horizontal card col-8" action="/update/{{button_id}}" method="POST" enctype="multipart/form-data">
+    <div class="card-header">
+    <h3>Редактирование кнопки - {{ context.name }}</h3>
+    </div>
+
+    <div class="form-group ">
+      <label for="name">Название кнопки:</label>
+      <input type = "text" name = "name" id='name' placeholder = "Name" class="form-control" value="{{context.name}}"/>
+    </div>
+
+    <div class="form-group">
+    <label for="is_moscow">Локация (москва/немосква)</label>
+    <select class="form-control" name="is_moscow" id="is_moscow" >
+      <option> {{ context.is_moscow }} </option>
+      <option>{{ not context.is_moscow }}</option>
+    </select>
+  </div>
+
+    <div class="form-group">
+    <label for="is_department">Кнопка контактов</label>
+    <select class="form-control" name="is_department" id="is_department">
+      <option> {{ context.is_department }} </option>
+      <option>{{ not context.is_department }}</option>
+    </select>
+    </div>
+
+
+    <div class="form-group">
+      <label for="text">Информационное сообщение:</label>
+      <textarea class="form-control" name="text" id="text" rows="10" required> {{ context.text }}</textarea>
+    </div>
+
+
+
+    <div class="form-group">
+    <label for="is_active">Активировать кнопку</label>
+    <select class="form-control" name="is_active" id="is_active">
+      <option> {{ context.is_active }} </option>
+      <option>{{ not context.is_active }}</option>
+    </select>
+    </div>
+    <div class="form-group">
+      <button type="submit" class="btn btn-default">Сохранить</button>
+    </div>
+  </form>
+
+  <div class="form-group">
+    <p>
+      {% if context.picture %}
+        {% for pic in context.picture %}
+
+      <form action= "{{ url_for('del_button_picture', button_id=context.id, picture=pic.split('/')[-1]) }}" method=post>
+          <img src={{pic}} alt="Picture" width=20% class="img-thumbnail">
+          <button type="submit" value="Submit">Удалить</button>
+      </form>
+
+          <br>
+        {% endfor %}
+      {% endif %}
+      </p>
+    </div>
+</div>
+
+
+{% endblock %}
