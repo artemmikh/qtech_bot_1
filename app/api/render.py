@@ -1,5 +1,5 @@
 import os
-from typing import Optional
+from app.core.config import settings
 
 from fastapi import APIRouter, Request, Form, UploadFile, Depends, File
 from fastapi.templating import Jinja2Templates
@@ -7,7 +7,7 @@ from fastapi.responses import HTMLResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 from starlette.responses import RedirectResponse
-from pathlib import Path
+from app.core.config import settings
 
 from app.core.db import get_async_session
 from app.api.button import (create_button, get_all_buttons,
@@ -102,6 +102,7 @@ async def update_button_form(request: Request,
     if context.picture:
         context.picture = context.picture.split(' ')
 
+
     return templates.TemplateResponse("form_patch.html", {"request": request,
                                                           "context": context,
                                                           'button_id': button_id
@@ -138,6 +139,7 @@ async def del_button_picture(
         picture: str,
         session: AsyncSession = Depends(get_async_session),
 ):
+
     button = await get_button_detail_by_id(button_id, session)
 
     picture_list = button.picture.split(' ')
