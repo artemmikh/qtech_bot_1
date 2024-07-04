@@ -103,6 +103,10 @@ async def update_button_form(request: Request,
         context.picture = context.picture.split(' ')
 
 
+    if context.file:
+        context.file = context.file.split(' ')
+
+
     return templates.TemplateResponse("form_patch.html", {"request": request,
                                                           "context": context,
                                                           'button_id': button_id
@@ -155,6 +159,34 @@ async def del_button_picture(
 
     current_working_directory = os.getcwd()
     delete_patch = current_working_directory + '/app/static/media/pics/' + picture
+    os.remove(delete_patch)
+
+    return RedirectResponse(router.url_path_for('update_button_form', button_id=button_id),
+                            status_code=status.HTTP_303_SEE_OTHER)
+
+@router.post(
+    '/delete_file/{button_id}/{file}',
+)
+async def del_button_file(
+        button_id: int,
+        file: str,
+        session: AsyncSession = Depends(get_async_session),
+):
+    button = await get_button_detail_by_id(button_id, session)
+
+    file_list = button.file.split(' ')
+
+    new_file_list = []
+    for file_url in file_list:
+        if file not in file_url:
+            new_file_list.append(file_url)
+
+    button.file = ' '.join(new_file_list)
+    await session.commit()
+    await session.refresh(button)
+
+    current_working_directory = os.getcwd()
+    delete_patch = current_working_directory + '/app/static/media/docs/' + file
     os.remove(delete_patch)
 
     return RedirectResponse(router.url_path_for('update_button_form', button_id=button_id),
