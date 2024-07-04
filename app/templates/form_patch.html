@@ -54,12 +54,10 @@
       {% if context.picture %}
         {% for pic in context.picture %}
 
-      <form action= "{{ url_for('del_button_picture', button_id=context.id, picture=pic.split('/')[-1]) }}" method=post>
-          <img src={{pic}} alt="Picture" width=20% class="img-thumbnail">
-          <button type="submit" value="Submit">Удалить</button>
-      </form>
-
-          <br>
+        <form action= "{{ url_for('del_button_picture', button_id=context.id, picture=pic.split('\\')[-1]) }}" method=post>
+            <img src={{pic}} alt="Picture" width=20% class="img-thumbnail">
+            <button type="submit" value="Submit">Удалить</button>
+        </form>
         {% endfor %}
       {% endif %}
       </p>
