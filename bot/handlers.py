@@ -90,19 +90,21 @@ def button_text_picture_doc_handler(update, context):
 
     button_id = int(query.data.split('_')[1])
     button = session.query(Button).filter_by(id=button_id).one_or_none()
-
     message = button.text
-    query.edit_message_text(text=message)
     
-    picture_path = button.picture
-    if picture_path:
-        picture_path = form_path(picture_path)
-        bot.send_photo(chat_id=update.effective_chat.id, photo=open(picture_path, 'rb'))
-   
-    document_path = button.file
-    if document_path:
-        document_path = form_path(document_path)
-        bot.send_document(chat_id=update.effective_chat.id, document=open(document_path, 'rb'))
+    picture_paths = button.picture
+    if picture_paths:
+        for picture_path in picture_paths.split(' '):
+            picture_path = form_path(picture_path)
+            bot.send_photo(chat_id=update.effective_chat.id, photo=open(picture_path, 'rb'),
+            caption=message)
+    
+    document_paths = button.file
+    if document_paths:
+        for document_path in document_paths.split(' '):
+            document_path = form_path(document_path)
+            bot.send_document(chat_id=update.effective_chat.id, document=open(document_path, 'rb'),
+            caption=message)
 
 
 def department_button_handler(update, context):
