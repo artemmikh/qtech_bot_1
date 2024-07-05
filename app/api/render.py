@@ -1,5 +1,4 @@
 import os
-from app.core.config import settings
 
 from fastapi import APIRouter, Request, Form, UploadFile, Depends, File
 from fastapi.templating import Jinja2Templates
@@ -12,6 +11,7 @@ from app.core.config import settings
 from app.core.db import get_async_session
 from app.api.button import (create_button, get_all_buttons,
                             get_button_detail_by_id)
+from app.utils.auxiliary import object_upload
 
 router = APIRouter(tags=['Render Bottons'])
 
@@ -102,10 +102,8 @@ async def update_button_form(request: Request,
     if context.picture:
         context.picture = context.picture.split(' ')
 
-
     if context.file:
         context.file = context.file.split(' ')
-
 
     return templates.TemplateResponse("form_patch.html", {"request": request,
                                                           "context": context,
@@ -122,6 +120,8 @@ async def update_button_form(
         text: str = Form(...),
         is_department: bool = Form(...),
         is_active: bool = Form(...),
+        file_pic: list[UploadFile] = File(...),
+        file_doc: list[UploadFile] = File(...),
         session: AsyncSession = Depends(get_async_session),
 ):
     button = await get_button_detail_by_id(button_id, session)
@@ -130,6 +130,22 @@ async def update_button_form(
     button.text = text
     button.is_department = is_department
     button.is_active = is_active
+
+    if file_pic[0].filename != '':
+        picture = ' '.join(object_upload(settings.PICTURE_ROOT, settings.BASE_DIR, file_pic))
+        if button.picture:
+            button.picture = f'{str(button.picture)} {picture}'
+        else:
+            button.picture = picture
+
+
+    if file_doc[0].filename != '':
+        file = ' '.join(object_upload(settings.DOC_ROOT, settings.BASE_DIR, file_doc))
+        if button.file:
+            button.file = f'{str(button.file)} {file}'
+        else:
+            button.file = file
+
     await session.commit()
     return RedirectResponse(router.url_path_for('get_button_detail', button_id=button_id),
                             status_code=status.HTTP_303_SEE_OTHER)
@@ -143,26 +159,25 @@ async def del_button_picture(
         picture: str,
         session: AsyncSession = Depends(get_async_session),
 ):
-
     button = await get_button_detail_by_id(button_id, session)
 
     picture_list = button.picture.split(' ')
 
     new_pic_list = []
     for pic_url in picture_list:
-        if picture not in pic_url:
+        if picture != pic_url.split('\\')[-1]:
             new_pic_list.append(pic_url)
 
     button.picture = ' '.join(new_pic_list)
     await session.commit()
     await session.refresh(button)
 
-    current_working_directory = os.getcwd()
-    delete_patch = current_working_directory + '/app/static/media/pics/' + picture
+    delete_patch = os.path.join(settings.PICTURE_ROOT, picture)
     os.remove(delete_patch)
 
     return RedirectResponse(router.url_path_for('update_button_form', button_id=button_id),
                             status_code=status.HTTP_303_SEE_OTHER)
+
 
 @router.post(
     '/delete_file/{button_id}/{file}',
@@ -178,15 +193,14 @@ async def del_button_file(
 
     new_file_list = []
     for file_url in file_list:
-        if file not in file_url:
+        if file != file_url.split('\\')[-1]:
             new_file_list.append(file_url)
 
     button.file = ' '.join(new_file_list)
     await session.commit()
     await session.refresh(button)
 
-    current_working_directory = os.getcwd()
-    delete_patch = current_working_directory + '/app/static/media/docs/' + file
+    delete_patch = os.path.join(settings.DOC_ROOT, file)
     os.remove(delete_patch)
 
     return RedirectResponse(router.url_path_for('update_button_form', button_id=button_id),

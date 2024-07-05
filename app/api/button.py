@@ -1,7 +1,7 @@
 from app.core.config import settings
 from fastapi import APIRouter, Depends, UploadFile, File
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.schemas.button import ButtonUpdate, ButtonBase
+from app.schemas.button import ButtonBase
 from app.core.db import get_async_session
 from app.crud.button import button_crud
 from app.utils.auxiliary import object_upload

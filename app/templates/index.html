@@ -1,38 +1,33 @@
 {% extends "base.html" %}
 {% block content %}
+<br>
 <div class="container">
     <h3>Список кнопок</h3>
-<table border="1">
-    <tr>
-        <th>Активирована</th>
-        <th>Название кнопки</th>
-        <th>Кнопка департамента</th>
-        <th>Удалить</th>
-        <th>Редактировать</th>
-    </tr>
-  </thead>
-    {% for item in context %}
-        <tbody>
-        <tr>
-            <td>{{ item.is_active }}</td>
-            <td>
-                <a href="/{{item.id}}" > 
-                {{ item.name }}
-                </a>
-            </td>
-            <td>{{ item.is_department }}</td>
+    <table class="table table-hover">
+        <thead class="thead-light">
+            <tr>
+                <th>Активирована</th>
+                <th>Название кнопки</th>
+                <th>Кнопка департамента</th>
+                <th></th>
+                <th></th>
+            </tr>
+        </thead>
 
-            <td>
-               >>>
-            </td>
-            <td>
-                    <a href="{{ url_for('update_button_form', button_id=item.id) }}" >
-                    >>>
-                    </a>
-            </td>
-        </tr>
+        <tbody>
+        {% for item in context %}
+            <tr>
+                <td class="col-md-2">{{ item.is_active }}</td>
+                <td class="col-md-2"><a href="/{{item.id}}" >{{ item.name }}</a></td>
+                <td class="col-md-2">{{ item.is_department }}</td>
+                <td class="col-md-2" align="center"><a href="..." >
+                    <img src="static/general/bin.png" style="width:15%"></a>
+                <td class="col-md-2" align="center"><a href="{{ url_for('update_button_form', button_id=item.id) }}" >
+                    <img src="static/general/edit.png" style="width:15%"></a>
+                </td>
+            </tr>
+        {% endfor %}
         </tbody>
-    {% endfor %}
-</table>
+    </table>
 </div>
 {% endblock %}
