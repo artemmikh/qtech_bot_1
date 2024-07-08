@@ -2,7 +2,7 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.bot import Bot
 from const import NEW_EMPLOYEE, OLD_EMPLOYEE, MOSCOW_NO, MOSCOW_YES
 from db import session, Button
-from utils import form_path
+from utils import form_path, form_media_group
 from dotenv import load_dotenv
 import os
 
@@ -87,24 +87,16 @@ def button_text_picture_doc_handler(update, context):
     и/или документа"""
     query = update.callback_query
     query.answer()
-
     button_id = int(query.data.split('_')[1])
     button = session.query(Button).filter_by(id=button_id).one_or_none()
-    message = button.text
+
+    if button.picture:
+        media_group = form_media_group(doc_paths=button.picture, message=button.text)
+        bot.send_media_group(chat_id=update.effective_chat.id, media=media_group)
     
-    picture_paths = button.picture
-    if picture_paths:
-        for picture_path in picture_paths.split(' '):
-            picture_path = form_path(picture_path)
-            bot.send_photo(chat_id=update.effective_chat.id, photo=open(picture_path, 'rb'),
-            caption=message)
-    
-    document_paths = button.file
-    if document_paths:
-        for document_path in document_paths.split(' '):
-            document_path = form_path(document_path)
-            bot.send_document(chat_id=update.effective_chat.id, document=open(document_path, 'rb'),
-            caption=message)
+    if button.file:
+        media_group = form_media_group(doc_paths=button.file, message=button.text)
+        bot.send_media_group(chat_id=update.effective_chat.id, media=media_group)
 
 
 def department_button_handler(update, context):
