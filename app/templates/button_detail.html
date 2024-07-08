@@ -24,7 +24,7 @@
     {% endif %}
 
     <p style="color:grey;">Текст по нажатию кнопки:</p>
-    <p>{{ context.text }}</p>
+    <p>{{ context.text | safe }}</p>
 
     <p>
     {% if context.file %}

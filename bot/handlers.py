@@ -1,7 +1,22 @@
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+import re
+
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ParseMode
 
 from const import NEW_EMPLOYEE, OLD_EMPLOYEE, MOSCOW_NO, MOSCOW_YES
 from db import Session, Button
+
+
+def clean_unsupported_tags_from_html(text):
+    """
+    Удаляет из HTML неподдерживаемые телеграмом
+    теги и заменяет теги переноса строк.
+    """
+    text = re.sub(r'<p[^>]*>', '\n', text)
+    text = re.sub(r'</p>', '', text)
+    text = text.replace('&nbsp;', '')
+    text = re.sub(r'<br\s*/?>', '\n', text)
+    text = text.strip()
+    return text
 
 
 def get_buttons(is_moscow, is_department):
@@ -122,7 +137,11 @@ def handle_button_text(update, context):
 
     keyboard = [[InlineKeyboardButton('Назад', callback_data='to_previous'),
                  InlineKeyboardButton('В начало', callback_data='to_start')]]
-    query.edit_message_text(text=button.text, reply_markup=InlineKeyboardMarkup(keyboard))
+
+    query.edit_message_text(
+        text=clean_unsupported_tags_from_html(button.text),
+        reply_markup=InlineKeyboardMarkup(keyboard),
+        parse_mode=ParseMode.HTML)
 
 
 def handle_back_to_previous(update, context):
