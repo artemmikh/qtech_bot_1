@@ -137,6 +137,7 @@ def handle_button_text(update, context):
 
     keyboard = [[InlineKeyboardButton('Назад', callback_data='to_previous'),
                  InlineKeyboardButton('В начало', callback_data='to_start')]]
+
     query.edit_message_text(
         text=clean_unsupported_tags_from_html(button.text),
         reply_markup=InlineKeyboardMarkup(keyboard),
