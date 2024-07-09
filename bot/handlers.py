@@ -1,118 +1,166 @@
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+import re
+
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ParseMode
 
 from const import NEW_EMPLOYEE, OLD_EMPLOYEE, MOSCOW_NO, MOSCOW_YES
-from db import session, Button
+from db import Session, Button
 
 
-def start_handler(update, context):
+def clean_unsupported_tags_from_html(text):
+    """
+    Удаляет из HTML неподдерживаемые телеграмом
+    теги и заменяет теги переноса строк.
+    """
+    text = re.sub(r'<p[^>]*>', '\n', text)
+    text = re.sub(r'</p>', '', text)
+    text = text.replace('&nbsp;', '')
+    text = re.sub(r'<br\s*/?>', '\n', text)
+    text = text.strip()
+    return text
+
+
+def get_buttons(is_moscow, is_department):
+    """Получение кнопок из базы данных"""
+    with Session() as session:
+        return session.query(Button).filter_by(is_moscow=is_moscow, is_department=is_department).all()
+
+
+def build_keyboard(buttons):
+    """Построение клавиатуры с кнопками"""
+    keyboard = [[InlineKeyboardButton(button.name, callback_data=f'button_{button.id}')] for button in buttons]
+    keyboard.append([InlineKeyboardButton('К кому обращаться?', callback_data='department_button')])
+    keyboard.append([
+        InlineKeyboardButton('Назад', callback_data='to_previous'),
+        InlineKeyboardButton('В начало', callback_data='to_start')
+    ])
+    return InlineKeyboardMarkup(keyboard)
+
+
+def handle_start(update, context):
     """Обработчик команды /start"""
+    query = update.callback_query
+    if query:
+        query.answer()
+
     keyboard = [
-        [InlineKeyboardButton(
-            'Я новый сотрудник',
-            callback_data=NEW_EMPLOYEE)],
-        [InlineKeyboardButton(
-            'Я работаю здесь уже долгое время',
-            callback_data=OLD_EMPLOYEE)]
+        [InlineKeyboardButton('Я новый сотрудник', callback_data=NEW_EMPLOYEE)],
+        [InlineKeyboardButton('Я работаю здесь уже долгое время', callback_data=OLD_EMPLOYEE)]
     ]
+    text = 'Для начала, расскажите, вы новый сотрудник или уже давно с нами?'
     reply_markup = InlineKeyboardMarkup(keyboard)
-    update.message.reply_text(
-        'Для начала, расскажите, вы новый сотрудник или уже давно с нами?',
-        reply_markup=reply_markup)
+
+    message = update.effective_message
+    if query:
+        message.edit_text(text=text, reply_markup=reply_markup)
+    else:
+        message.reply_text(text=text, reply_markup=reply_markup)
 
 
-def moscow_office_handler(update, context):
+def handle_moscow_office(update, context):
     """Обработчик кнопок про Москву"""
     query = update.callback_query
     query.answer()
+    context.user_data['previous'] = 'handle_start'
 
     if query.data == NEW_EMPLOYEE:
         text = ('Добро пожаловать в ГК QTECH!! Этот чат-бот поможет '
                 'сориентироваться в первые дни работы '
                 'и узнать больше о нашей компании. '
                 'Посещаете ли вы офис в Москве?')
-    elif query.data == OLD_EMPLOYEE:
+    else:
         text = ('Здорово, что вы присоединились к чат-боту! '
-                'Он поможет вам структурировать  информацию '
+                'Он поможет вам структурировать информацию '
                 'о нашей компании воедино или узнать что-то новое. '
                 'Вы сможете задать свои вопросы и озвучить '
                 'предложения по улучшению. '
                 'Посещаете ли вы офис в Москве?')
 
     keyboard = [
-        [
-            InlineKeyboardButton('Да', callback_data=MOSCOW_YES),
-            InlineKeyboardButton('Нет', callback_data=MOSCOW_NO),
-        ]
+        [InlineKeyboardButton('Да', callback_data=MOSCOW_YES),
+         InlineKeyboardButton('Нет', callback_data=MOSCOW_NO)],
+        [InlineKeyboardButton('В начало', callback_data='to_start')]
     ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    query.edit_message_text(text=text, reply_markup=reply_markup)
+    query.edit_message_text(text=text, reply_markup=InlineKeyboardMarkup(keyboard))
 
 
-def info_buttons_handler(update, context):
+def handle_info_buttons(update, context):
     """Обработчик нажатия кнопок"""
     query = update.callback_query
     query.answer()
+    context.user_data['previous'] = 'handle_moscow_office'
 
-    if query.data == MOSCOW_YES:
-        buttons = session.query(Button).filter_by(is_moscow=True,
-                                                  is_department=False).all()
-    elif query.data == MOSCOW_NO:
-        buttons = session.query(Button).filter_by(is_moscow=False,
-                                                  is_department=False).all()
+    office_choice = query.data
+    context.user_data['office_choice'] = office_choice
 
-    keyboard = [
-        [InlineKeyboardButton(button.name, callback_data=f'button_{button.id}')]
-        for button in buttons
-    ]
-    keyboard.append([InlineKeyboardButton('К кому обращаться?',
-                                          callback_data=f'department_button_{query.data}')])
+    is_moscow = office_choice == MOSCOW_YES
+    buttons = get_buttons(is_moscow=is_moscow, is_department=False)
+    reply_markup = build_keyboard(buttons)
 
-    reply_markup = InlineKeyboardMarkup(keyboard)
     query.edit_message_text(
-        text='Спасибо за информацию! '
-             'Предлагаем вам ознакомиться с меню '
-             'и выбрать интересующую категорию',
-        reply_markup=reply_markup)
+        text='Спасибо за информацию! Предлагаем вам ознакомиться с меню и выбрать интересующую категорию',
+        reply_markup=reply_markup
+    )
 
 
-def button_text_handler(update, context):
+def handle_department_buttons(update, context):
+    """Обработчик кнопки 'К кому обращаться?'"""
+    query = update.callback_query
+    query.answer()
+    context.user_data['previous'] = 'handle_info_buttons'
+
+    office_choice = context.user_data.get('office_choice')
+    is_moscow = office_choice == MOSCOW_YES
+    buttons = get_buttons(is_moscow=is_moscow, is_department=True)
+
+    keyboard = [[InlineKeyboardButton(button.name, callback_data=f'button_{button.id}')] for button in buttons]
+    keyboard.append([InlineKeyboardButton('Назад', callback_data='to_previous'),
+                     InlineKeyboardButton('В начало', callback_data='to_start')])
+    reply_markup = InlineKeyboardMarkup(keyboard)
+
+    query.edit_message_text(text='Выберите отдел', reply_markup=reply_markup)
+
+
+def handle_button_text(update, context):
     """Обработчик вывода текста кнопки"""
     query = update.callback_query
     query.answer()
 
     button_id = int(query.data.split('_')[1])
-    button = session.query(Button).filter_by(id=button_id).one_or_none()
+    button = Session.query(Button).filter_by(id=button_id).one_or_none()
 
-    message = button.text
-    query.edit_message_text(text=message)
+    if not button:
+        query.edit_message_text(text='Ошибка: кнопка не найдена.')
+        return
+
+    context.user_data['previous'] = 'handle_department_buttons' if context.user_data.get(
+        'previous') == 'handle_info_buttons' else 'handle_info_buttons'
+
+    keyboard = [[InlineKeyboardButton('Назад', callback_data='to_previous'),
+                 InlineKeyboardButton('В начало', callback_data='to_start')]]
+
+    query.edit_message_text(
+        text=clean_unsupported_tags_from_html(button.text),
+        reply_markup=InlineKeyboardMarkup(keyboard),
+        parse_mode=ParseMode.HTML)
 
 
-def department_button_handler(update, context):
-    """Обработчик кнопки 'К кому обращаться?'"""
+def handle_back_to_previous(update, context):
+    """Обработчик кнопки 'Назад'"""
     query = update.callback_query
     query.answer()
 
-    office_choice = query.data.split('_')[3]
-
-    if office_choice == 'yes':
-        buttons = session.query(Button).filter_by(is_moscow=True,
-                                                  is_department=True).all()
-    elif office_choice == 'no':
-        buttons = session.query(Button).filter_by(is_moscow=False,
-                                                  is_department=True).all()
-
-    keyboard = [
-        [InlineKeyboardButton(button.name, callback_data=f'button_{button.id}')]
-        for button in buttons]
-
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    query.edit_message_text(
-        text='Выберите отдел',
-        reply_markup=reply_markup)
+    previous_handler_name = context.user_data.get('previous')
+    if previous_handler_name:
+        previous_handler = globals().get(previous_handler_name)
+        if previous_handler:
+            previous_handler(update, context)
+        else:
+            handle_start(update, context)
+    else:
+        handle_start(update, context)
 
 
-def message_handler(update, context):
-    """Отправляет сообщение о том, что писать в чат бессмысленно и нужно жать на кнопки"""
+def handle_message(update, context):
+    """Сообщение о необходимости использовать кнопки"""
     chat = update.effective_chat
-    context.bot.send_message(chat_id=chat.id,
-                             text='Пожалуйста, используйте кнопки для навигации')
+    context.bot.send_message(chat_id=chat.id, text='Пожалуйста, используйте кнопки для навигации')
