@@ -23,3 +23,10 @@ def duplicate_name_check(file_root, filename):
     if count_unique > 0:
         return f'{count_unique}_{filename}'
     return filename
+
+
+def object_delete(file_root, obj_str_to_delete):
+    for root in obj_str_to_delete.split(' '):
+        obj = root.split('\\')[-1]
+        del_root = os.path.join(file_root, obj)
+        os.remove(del_root)

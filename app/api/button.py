@@ -1,10 +1,12 @@
+import os
+
 from app.core.config import settings
 from fastapi import APIRouter, Depends, UploadFile, File
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.schemas.button import ButtonBase
 from app.core.db import get_async_session
 from app.crud.button import button_crud
-from app.utils.auxiliary import object_upload
+from app.utils.auxiliary import object_upload, object_delete
 
 router = APIRouter(
     tags=['API Bottons']
@@ -59,3 +61,24 @@ async def get_button_detail_by_id(
 ):
     button_detail = await button_crud.get(button_id, session)
     return button_detail
+
+
+@router.delete(
+    '/api/delete/{button_id}',
+    response_model_exclude_none=True,
+)
+async def delete_button(
+    button_id: int,
+    session: AsyncSession = Depends(get_async_session),
+) -> None:
+    button = await button_crud.get(button_id, session)
+
+    if button.picture:
+        object_delete(settings.PICTURE_ROOT, button.picture)
+
+    if button.file:
+        object_delete(settings.DOC_ROOT, button.file)
+
+    return await button_crud.remove(
+        button, session
+    )
