@@ -1,4 +1,5 @@
 import os
+from typing import Annotated
 
 from fastapi import APIRouter, Request, Form, UploadFile, Depends, File
 from fastapi.templating import Jinja2Templates
@@ -10,7 +11,7 @@ from app.core.config import settings
 
 from app.core.db import get_async_session
 from app.api.button import (create_button, get_all_buttons,
-                            get_button_detail_by_id)
+                            get_button_detail_by_id, delete_button)
 from app.utils.auxiliary import object_upload
 
 router = APIRouter(tags=['Render Bottons'])
@@ -138,7 +139,6 @@ async def update_button_form(
         else:
             button.picture = picture
 
-
     if file_doc[0].filename != '':
         file = ' '.join(object_upload(settings.DOC_ROOT, settings.BASE_DIR, file_doc))
         if button.file:
@@ -204,4 +204,18 @@ async def del_button_file(
     os.remove(delete_patch)
 
     return RedirectResponse(router.url_path_for('update_button_form', button_id=button_id),
+                            status_code=status.HTTP_303_SEE_OTHER)
+
+
+@router.post(
+    '/delete/{button_id}',
+)
+async def delete_item(
+        button_id: int,
+        session: AsyncSession = Depends(get_async_session)
+):
+
+    await delete_button(button_id=button_id, session=session)
+
+    return RedirectResponse(router.url_path_for('render_all_buttons'),
                             status_code=status.HTTP_303_SEE_OTHER)
