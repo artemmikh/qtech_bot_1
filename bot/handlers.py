@@ -1,7 +1,23 @@
+import re
+
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ParseMode
 
+from bot.utils import form_media_group
 from const import NEW_EMPLOYEE, OLD_EMPLOYEE, MOSCOW_NO, MOSCOW_YES
 from db import session, Button
+
+
+def clean_unsupported_tags_from_html(text):
+    """
+    Удаляет из HTML неподдерживаемые телеграмом
+    теги и заменяет теги переноса строк.
+    """
+    text = re.sub(r'<p[^>]*>', '\n', text)
+    text = re.sub(r'</p>', '', text)
+    text = text.replace('&nbsp;', '')
+    text = re.sub(r'<br\s*/?>', '\n', text)
+    text = text.strip()
+    return text
 
 
 def start_handler(update, context):
@@ -73,7 +89,7 @@ def info_buttons_handler(update, context):
     context_office_choice = context.user_data.get('office_choice')
 
     print(f'query.data = {query.data}')
-    print(f'context.user_data.get("office_choice") = {context.user_data.get("office_choice")}')  # 'yes' or 'no'
+    print(f'context.user_data.get("office_choice") = {context.user_data.get("office_choice")}')
 
     if query.data == MOSCOW_YES or context_office_choice == 'yes':
         buttons = session.query(Button).filter_by(is_moscow=True,
@@ -136,23 +152,22 @@ def department_button_handler(update, context):
         reply_markup=reply_markup)
 
 
-def button_text_handler(update, context):
-    """Обработчик вывода текста кнопки"""
+def button_text_picture_doc_handler(update, context):
+    """Обработчик вывода текста кнопки и прикрепленной картинки и/или документа"""
     query = update.callback_query
     query.answer()
-    context_previous = context.user_data.get('previous')
-    context_ofice_choise = context.user_data.get('office_choice')
-    print(f'context_ofice_choise == {context_ofice_choise}')
-
     button_id = int(query.data.split('_')[1])
     button = session.query(Button).filter_by(id=button_id).one_or_none()
+
     if not button:
         query.edit_message_text(text='Ошибка: кнопка не найдена.')
         return
 
-    if context.user_data.get('previous') == 'moscow_office_handler':
+    context_previous = context.user_data.get('previous')
+
+    if context_previous == 'moscow_office_handler':
         context.user_data['previous'] = 'info_buttons_handler'
-    elif context.user_data.get('previous') == 'info_buttons_handler':
+    elif context_previous == 'info_buttons_handler':
         context.user_data['previous'] = 'department_button_handler'
 
     keyboard = [
@@ -162,11 +177,17 @@ def button_text_handler(update, context):
         ]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    message = button.text
-    query.edit_message_text(
-        text=message,
-        reply_markup=reply_markup,
-        parse_mode=ParseMode.HTML)
+    message = clean_unsupported_tags_from_html(button.text)
+
+    if button.picture:
+        media_group = form_media_group(doc_paths=button.picture, message=message, media_type='photo')
+        context.bot.send_media_group(chat_id=update.effective_chat.id, media=media_group)
+
+    elif button.file:
+        media_group = form_media_group(doc_paths=button.file, message=message, media_type='doc')
+        context.bot.send_media_group(chat_id=update.effective_chat.id, media=media_group)
+    else:
+        query.edit_message_text(text=message, reply_markup=reply_markup, parse_mode=ParseMode.HTML)
 
 
 def back_to_previous_handler(update, context):

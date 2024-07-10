@@ -1,6 +1,9 @@
 __pycache__/
 .__pycache__
 *.py[cod]
+**/**/__pycache__/
+.venv
+venv
 
 # C extensions
 *.so
@@ -54,4 +57,7 @@ draft.py
 .idea/
 media/
 .media/
-**/**/__pycache__/
+
+# .env and venv
+.venv
+venv/
