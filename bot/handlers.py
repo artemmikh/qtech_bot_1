@@ -1,7 +1,23 @@
+import re
+
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ParseMode
 
+from bot.utils import form_media_group
 from const import NEW_EMPLOYEE, OLD_EMPLOYEE, MOSCOW_NO, MOSCOW_YES
 from db import session, Button
+
+
+def clean_unsupported_tags_from_html(text):
+    """
+    Удаляет из HTML неподдерживаемые телеграмом
+    теги и заменяет теги переноса строк.
+    """
+    text = re.sub(r'<p[^>]*>', '\n', text)
+    text = re.sub(r'</p>', '', text)
+    text = text.replace('&nbsp;', '')
+    text = re.sub(r'<br\s*/?>', '\n', text)
+    text = text.strip()
+    return text
 
 
 def start_handler(update, context):
@@ -73,7 +89,7 @@ def info_buttons_handler(update, context):
     context_office_choice = context.user_data.get('office_choice')
 
     print(f'query.data = {query.data}')
-    print(f'context.user_data.get("office_choice") = {context.user_data.get("office_choice")}')  # 'yes' or 'no'
+    print(f'context.user_data.get("office_choice") = {context.user_data.get("office_choice")}')
 
     if query.data == MOSCOW_YES or context_office_choice == 'yes':
         buttons = session.query(Button).filter_by(is_moscow=True,
@@ -141,7 +157,7 @@ def button_text_picture_doc_handler(update, context):
     query = update.callback_query
     query.answer()
     button_id = int(query.data.split('_')[1])
-    button = Session.query(Button).filter_by(id=button_id).one_or_none()
+    button = session.query(Button).filter_by(id=button_id).one_or_none()
 
     if not button:
         query.edit_message_text(text='Ошибка: кнопка не найдена.')
