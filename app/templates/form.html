@@ -7,40 +7,55 @@
 		<div class="card-header">
 			<h3>Создание информационной кнопки</h3>
 		</div>
+
+		<br>
+		<div class="container">
+			<div class="row">
+				<div class="text-danger font-weight-bold">
+					<ul>
+						{% for error in errors %}
+							<li class="alert alert-danger">
+								{{error}}
+							</li>
+						{% endfor %}
+					</ul>
+				</div>
+			</div>
+		</div>
 		
 		<div class="form-group ">
 			<label for="name">Название кнопки:</label>
-			<input type="text" class="form-control col-sm-12 invalidInput" name="name" id="name" placeholder="HR" required/>
+			<input type="text" class="form-control col-sm-12 invalidInput" name="name" id="name" placeholder= "Название кнопки" value="{{context.name}}" required/>
 		</div>
 		
 		<div class="form-group">
 			<label for="is_moscow">Локация (москва/немосква)</label>
-			<select class="form-control" name="is_moscow" id="is_moscow">
-				<option>true</option>
-				<option>false</option>
+			<select class="form-control" name="is_moscow" id="is_moscow" >
+				<option value="True">Москва</option>
+				<option value="False">Регион</option>
 			</select>
 		</div>
 		
 		<div class="form-group">
 			<label for="is_department">Кнопка контактов</label>
 			<select class="form-control" name="is_department" id="is_department">
-				<option>true</option>
-				<option>false</option>
+				<option value="True">Да</option>
+				<option value="False">Нет</option>
 			</select>
 		</div>
 		
 		
 		<div class="form-group">
 			<label for="text">Информационное сообщение:</label>
-			<textarea name="text" id="text"></textarea>
+			<textarea name="text" id="text" placeholder= "Описание кнопки">{{context.text}}</textarea>
 		</div>
 		
 		
 		<div class="form-group">
 			<label for="is_active">Активировать кнопку</label>
 			<select class="form-control" name="is_active" id="is_active">
-				<option>true</option>
-				<option>false</option>
+				<option value="True">Да</option>
+				<option value="False">Нет</option>
 			</select>
 		</div>
 		
