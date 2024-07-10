@@ -12,9 +12,10 @@ class Settings(BaseSettings):
     MEDIA_ROOT = os.path.join(STATIC_ROOT, 'media')
     PICTURE_ROOT = os.path.join(MEDIA_ROOT, 'pics')
     DOC_ROOT = os.path.join(MEDIA_ROOT, 'docs')
-
+    secret: str = 'SECRET'
 
     class Config:
         env_file = '.env'
+
 
 settings = Settings()
