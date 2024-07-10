@@ -1,18 +1,15 @@
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.bot import Bot
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ParseMode
+
 from const import NEW_EMPLOYEE, OLD_EMPLOYEE, MOSCOW_NO, MOSCOW_YES
 from db import session, Button
-from utils import form_path, form_media_group
-from dotenv import load_dotenv
-import os
 
-load_dotenv() 
-
-TOKEN = os.getenv('BOT_TOKEN')
-bot = Bot(token=TOKEN)
 
 def start_handler(update, context):
     """Обработчик команды /start"""
+    query = update.callback_query
+    if query:
+        query.answer()
+
     keyboard = [
         [InlineKeyboardButton(
             'Я новый сотрудник',
@@ -21,17 +18,23 @@ def start_handler(update, context):
             'Я работаю здесь уже долгое время',
             callback_data=OLD_EMPLOYEE)]
     ]
+
+    text = 'Для начала, расскажите, вы новый сотрудник или уже давно с нами?'
+    message = update.effective_message
     reply_markup = InlineKeyboardMarkup(keyboard)
-    update.message.reply_text(
-        'Для начала, расскажите, вы новый сотрудник или уже давно с нами?',
-        reply_markup=reply_markup)
+    if query:
+        message.edit_text(text=text, reply_markup=reply_markup)
+    else:
+        message.reply_text(text=text, reply_markup=reply_markup)
 
 
 def moscow_office_handler(update, context):
     """Обработчик кнопок про Москву"""
     query = update.callback_query
     query.answer()
+    context.user_data['previous'] = 'start_handler'
 
+    text = 'Посещаете ли вы офис в Москве?'
     if query.data == NEW_EMPLOYEE:
         text = ('Добро пожаловать в ГК QTECH!! Этот чат-бот поможет '
                 'сориентироваться в первые дни работы '
@@ -49,7 +52,8 @@ def moscow_office_handler(update, context):
         [
             InlineKeyboardButton('Да', callback_data=MOSCOW_YES),
             InlineKeyboardButton('Нет', callback_data=MOSCOW_NO),
-        ]
+        ],
+        [InlineKeyboardButton('В начало', callback_data='to_start')]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     query.edit_message_text(text=text, reply_markup=reply_markup)
@@ -59,11 +63,22 @@ def info_buttons_handler(update, context):
     """Обработчик нажатия кнопок"""
     query = update.callback_query
     query.answer()
+    context.user_data['previous'] = 'moscow_office_handler'
 
     if query.data == MOSCOW_YES:
+        context.user_data['office_choice'] = 'yes'
+    elif query.data == MOSCOW_NO:
+        context.user_data['office_choice'] = 'no'
+
+    context_office_choice = context.user_data.get('office_choice')
+
+    print(f'query.data = {query.data}')
+    print(f'context.user_data.get("office_choice") = {context.user_data.get("office_choice")}')  # 'yes' or 'no'
+
+    if query.data == MOSCOW_YES or context_office_choice == 'yes':
         buttons = session.query(Button).filter_by(is_moscow=True,
                                                   is_department=False).all()
-    elif query.data == MOSCOW_NO:
+    elif query.data == MOSCOW_NO or context_office_choice == 'no':
         buttons = session.query(Button).filter_by(is_moscow=False,
                                                   is_department=False).all()
 
@@ -72,7 +87,11 @@ def info_buttons_handler(update, context):
         for button in buttons
     ]
     keyboard.append([InlineKeyboardButton('К кому обращаться?',
-                                          callback_data=f'department_button_{query.data}')])
+                                          callback_data=f'department_button_moscow_{context.user_data["office_choice"]}')])
+    keyboard.append([
+        InlineKeyboardButton('Назад', callback_data='to_previous'),
+        InlineKeyboardButton('В начало', callback_data='to_start')
+    ])
 
     reply_markup = InlineKeyboardMarkup(keyboard)
     query.edit_message_text(
@@ -82,45 +101,93 @@ def info_buttons_handler(update, context):
         reply_markup=reply_markup)
 
 
-def button_text_picture_doc_handler(update, context):
-    """Обработчик вывода текста кнопки и прикрепленной картинки 
-    и/или документа"""
-    query = update.callback_query
-    query.answer()
-    button_id = int(query.data.split('_')[1])
-    button = session.query(Button).filter_by(id=button_id).one_or_none()
-
-    if button.picture:
-        media_group = form_media_group(doc_paths=button.picture, message=button.text, media_type='photo')
-        bot.send_media_group(chat_id=update.effective_chat.id, media=media_group)
-    
-    if button.file:
-        media_group = form_media_group(doc_paths=button.file, message=button.text, media_type='doc')
-        bot.send_media_group(chat_id=update.effective_chat.id, media=media_group)
-
-
 def department_button_handler(update, context):
     """Обработчик кнопки 'К кому обращаться?'"""
     query = update.callback_query
     query.answer()
+    context.user_data['previous'] = 'info_buttons_handler'
 
-    office_choice = query.data.split('_')[3]
+    print(query.data)
+    if context.user_data.get('office_choice') == None:
+        office_choice = query.data.split('_')[3]
+    else:
+        office_choice = None
 
-    if office_choice == 'yes':
+    if office_choice and office_choice == 'yes' or context.user_data.get('office_choice') == 'yes':
+        context.user_data['office_choice'] = 'yes'
         buttons = session.query(Button).filter_by(is_moscow=True,
                                                   is_department=True).all()
-    elif office_choice == 'no':
+    elif office_choice == 'no' or context.user_data.get('office_choice') == 'no':
+        context.user_data['office_choice'] = 'no'
         buttons = session.query(Button).filter_by(is_moscow=False,
                                                   is_department=True).all()
 
     keyboard = [
         [InlineKeyboardButton(button.name, callback_data=f'button_{button.id}')]
-        for button in buttons]
-
+        for button in buttons
+    ]
+    keyboard.append([
+        InlineKeyboardButton('Назад', callback_data='to_previous'),
+        InlineKeyboardButton('В начало', callback_data='to_start')
+    ])
     reply_markup = InlineKeyboardMarkup(keyboard)
     query.edit_message_text(
         text='Выберите отдел',
         reply_markup=reply_markup)
+
+
+def button_text_picture_doc_handler(update, context):
+    """Обработчик вывода текста кнопки и прикрепленной картинки и/или документа"""
+    query = update.callback_query
+    query.answer()
+    button_id = int(query.data.split('_')[1])
+    button = Session.query(Button).filter_by(id=button_id).one_or_none()
+
+    if not button:
+        query.edit_message_text(text='Ошибка: кнопка не найдена.')
+        return
+
+    context_previous = context.user_data.get('previous')
+
+    if context_previous == 'moscow_office_handler':
+        context.user_data['previous'] = 'info_buttons_handler'
+    elif context_previous == 'info_buttons_handler':
+        context.user_data['previous'] = 'department_button_handler'
+
+    keyboard = [
+        [
+            InlineKeyboardButton('Назад', callback_data='to_previous'),
+            InlineKeyboardButton('В начало', callback_data='to_start')
+        ]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    message = clean_unsupported_tags_from_html(button.text)
+
+    if button.picture:
+        media_group = form_media_group(doc_paths=button.picture, message=message, media_type='photo')
+        context.bot.send_media_group(chat_id=update.effective_chat.id, media=media_group)
+
+    elif button.file:
+        media_group = form_media_group(doc_paths=button.file, message=message, media_type='doc')
+        context.bot.send_media_group(chat_id=update.effective_chat.id, media=media_group)
+    else:
+        query.edit_message_text(text=message, reply_markup=reply_markup, parse_mode=ParseMode.HTML)
+
+
+def back_to_previous_handler(update, context):
+    """Обработчик кнопки 'Назад'"""
+    query = update.callback_query
+    query.answer()
+
+    previous_handler_name = context.user_data.get('previous')
+    if previous_handler_name:
+        previous_handler = globals().get(previous_handler_name)
+        if previous_handler:
+            previous_handler(update, context)
+        else:
+            start_handler(update, context)
+    else:
+        start_handler(update, context)
 
 
 def message_handler(update, context):
