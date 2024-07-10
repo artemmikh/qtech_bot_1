@@ -91,11 +91,11 @@ def button_text_picture_doc_handler(update, context):
     button = session.query(Button).filter_by(id=button_id).one_or_none()
 
     if button.picture:
-        media_group = form_media_group(doc_paths=button.picture, message=button.text)
+        media_group = form_media_group(doc_paths=button.picture, message=button.text, media_type='photo')
         bot.send_media_group(chat_id=update.effective_chat.id, media=media_group)
     
     if button.file:
-        media_group = form_media_group(doc_paths=button.file, message=button.text)
+        media_group = form_media_group(doc_paths=button.file, message=button.text, media_type='doc')
         bot.send_media_group(chat_id=update.effective_chat.id, media=media_group)
 
 
