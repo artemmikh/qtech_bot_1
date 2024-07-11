@@ -2,7 +2,7 @@ import re
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ParseMode
 
-from bot.utils import form_media_group
+from utils import form_media_group
 from const import NEW_EMPLOYEE, OLD_EMPLOYEE, MOSCOW_NO, MOSCOW_YES
 from db import session, Button
 
@@ -180,14 +180,14 @@ def button_text_picture_doc_handler(update, context):
     message = clean_unsupported_tags_from_html(button.text)
 
     if button.picture:
-        media_group = form_media_group(doc_paths=button.picture, message=message, media_type='photo')
+        media_group = form_media_group(doc_paths=button.picture, media_type='photo')
+        context.bot.send_media_group(chat_id=update.effective_chat.id, media=media_group)
+    elif button.file:
+        media_group = form_media_group(doc_paths=button.file, media_type='doc')
         context.bot.send_media_group(chat_id=update.effective_chat.id, media=media_group)
 
-    elif button.file:
-        media_group = form_media_group(doc_paths=button.file, message=message, media_type='doc')
-        context.bot.send_media_group(chat_id=update.effective_chat.id, media=media_group)
-    else:
-        query.edit_message_text(text=message, reply_markup=reply_markup, parse_mode=ParseMode.HTML)
+    context.bot.send_message(chat_id=update.effective_chat.id, text=message, reply_markup=reply_markup)  
+   
 
 
 def back_to_previous_handler(update, context):

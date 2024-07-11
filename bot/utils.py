@@ -12,17 +12,18 @@ def form_path(path):
     # return os.getcwd().replace('/bot', '') + APP_PATH + path
 
 
-def form_media_group(doc_paths, message, media_type):
+def form_media_group(doc_paths, media_type):
     input_media = {'doc': InputMediaDocument,
                    'photo': InputMediaPhoto}
     media_group = list()
-    caption = None
+    #caption = None
     doc_paths = doc_paths.split(' ')
-    num_of_docs = len(doc_paths)
+    #num_of_docs = len(doc_paths)
     for num, doc_path in enumerate(doc_paths, start=1):
         doc_path = form_path(doc_path)
-        if num == num_of_docs:
-            caption = message
+        #if num == num_of_docs:
+        #    caption = message
+
         media_group.append(
-            input_media[media_type](media=open(doc_path, 'rb'), caption=caption, parse_mode=ParseMode.HTML))
+            input_media[media_type](media=open(doc_path, 'rb'), parse_mode=ParseMode.HTML))
     return media_group
