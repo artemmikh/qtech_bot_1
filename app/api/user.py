@@ -1,59 +1,29 @@
 import datetime as dt
 from typing import Dict, List, Optional
 
-from fastapi import APIRouter
-from fastapi import Depends, FastAPI, HTTPException, Request, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from fastapi.openapi.models import OAuthFlows as OAuthFlowsModel
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.security import OAuth2, OAuth2PasswordRequestForm
 from fastapi.security.utils import get_authorization_scheme_param
 from fastapi.templating import Jinja2Templates
 from jose import JWTError, jwt
-from passlib.handlers.sha2_crypt import sha512_crypt as crypto
-from pydantic import BaseModel
-from rich import print
+from passlib.context import CryptContext
 from rich.console import Console
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
-
-templates = Jinja2Templates(directory="app/templates")
-router = APIRouter()
+from app.core.db import get_async_session
+from app.crud.user import get_user
+from app.models.user import User
 
 console = Console()
 
-
-# --------------------------------------------------------------------------
-# Models and Data
-# --------------------------------------------------------------------------
-class User(BaseModel):
-    email: str
-    hashed_password: str
+templates = Jinja2Templates(directory="app/templates")
+router = APIRouter()
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
-# Create a "database" to hold your data. This is just for example purposes. In
-# a real world scenario you would likely connect to a SQL or NoSQL database.
-class DataBase(BaseModel):
-    user: List[User]
-
-
-DB = DataBase(
-    user=[
-        User(email="user1@gmail.com", hashed_password=crypto.hash("12345")),
-        User(email="user2@gmail.com", hashed_password=crypto.hash("12345")),
-    ]
-)
-
-
-def get_user(email: str) -> User:
-    user = [user for user in DB.user if user.email == email]
-    if user:
-        return user[0]
-    return None
-
-
-# --------------------------------------------------------------------------
-# Setup FastAPI
-# --------------------------------------------------------------------------
 class Settings:
     SECRET_KEY: str = "secret-key"
     ALGORITHM = "HS256"
@@ -61,22 +31,10 @@ class Settings:
     COOKIE_NAME = "access_token"
 
 
-templates = Jinja2Templates(directory="app/templates")
 settings = Settings()
 
 
-# --------------------------------------------------------------------------
-# Authentication logic
-# --------------------------------------------------------------------------
 class OAuth2PasswordBearerWithCookie(OAuth2):
-    """
-    This class is taken directly from FastAPI:
-    https://github.com/tiangolo/fastapi/blob/26f725d259c5dbe3654f221e608b14412c6b40da/fastapi/security/oauth2.py#L140-L171
-
-    The only change made is that authentication is taken from a cookie
-    instead of from the header!
-    """
-
     def __init__(
             self,
             tokenUrl: str,
@@ -96,9 +54,6 @@ class OAuth2PasswordBearerWithCookie(OAuth2):
         )
 
     async def __call__(self, request: Request) -> Optional[str]:
-        # IMPORTANT: this is the line that differs from FastAPI. Here we use
-        # `request.cookies.get(settings.COOKIE_NAME)` instead of
-        # `request.headers.get("Authorization")`
         authorization: str = request.cookies.get(settings.COOKIE_NAME)
         scheme, param = get_authorization_scheme_param(authorization)
         if not authorization or scheme.lower() != "bearer":
@@ -128,16 +83,16 @@ def create_access_token(data: Dict) -> str:
     return encoded_jwt
 
 
-def authenticate_user(email: str, plain_password: str) -> User:
-    user = get_user(email)
+async def authenticate_user(email: str, plain_password: str, session: AsyncSession) -> Optional[User]:
+    user = await get_user(email, session)
     if not user:
-        return False
-    if not crypto.verify(plain_password, user.hashed_password):
-        return False
+        return None
+    if not pwd_context.verify(plain_password, user.hashed_password):
+        return None
     return user
 
 
-def decode_token(token: str) -> User:
+async def decode_token(token: str, session: AsyncSession) -> User:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials."
@@ -152,45 +107,35 @@ def decode_token(token: str) -> User:
         print(e)
         raise credentials_exception
 
-    user = get_user(email)
+    user = await get_user(email, session)
+    if user is None:
+        raise credentials_exception
     return user
 
 
-def get_current_user_from_token(token: str = Depends(oauth2_scheme)) -> User:
-    """
-    Get the current user from the cookies in a request.
-
-    Use this function when you want to lock down a route so that only
-    authenticated users can see access the route.
-    """
-    user = decode_token(token)
+async def get_current_user_from_token(token: str = Depends(oauth2_scheme),
+                                      session: AsyncSession = Depends(get_async_session)) -> User:
+    user = await decode_token(token, session)
     return user
 
 
-def get_current_user_from_cookie(request: Request) -> User:
-    """
-    Get the current user from the cookies in a request.
-
-    Use this function from inside other routes to get the current user. Good
-    for views that should work for both logged in, and not logged in users.
-    """
+async def get_current_user_from_cookie(request: Request, session: AsyncSession = Depends(get_async_session)) -> User:
     token = request.cookies.get(settings.COOKIE_NAME)
-    user = decode_token(token)
+    user = await decode_token(token, session)
     return user
 
 
-@router.post("token")
-def login_for_access_token(
+@router.post("/token")
+async def login_for_access_token(
         response: Response,
-        form_data: OAuth2PasswordRequestForm = Depends()
+        form_data: OAuth2PasswordRequestForm = Depends(),
+        session: AsyncSession = Depends(get_async_session)
 ) -> Dict[str, str]:
-    user = authenticate_user(form_data.email, form_data.password)
+    user = await authenticate_user(form_data.email, form_data.password, session)
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect email or password")
     access_token = create_access_token(data={"email": user.email})
 
-    # Set an HttpOnly cookie in the response. `httponly=True` prevents
-    # JavaScript from reading the cookie.
     response.set_cookie(
         key=settings.COOKIE_NAME,
         value=f"Bearer {access_token}",
@@ -199,49 +144,6 @@ def login_for_access_token(
     return {settings.COOKIE_NAME: access_token, "token_type": "bearer"}
 
 
-# --------------------------------------------------------------------------
-# Home Page
-# --------------------------------------------------------------------------
-# @app.get("/", response_class=HTMLResponse)
-# def index(request: Request):
-#     try:
-#         user = get_current_user_from_cookie(request)
-#     except:
-#         user = None
-#     context = {
-#         "user": user,
-#         "request": request,
-#     }
-#     return templates.TemplateResponse("index.html", context)
-
-
-# --------------------------------------------------------------------------
-# Private Page
-# --------------------------------------------------------------------------
-# A private page that only logged in users can access.
-@router.get("/private", response_class=HTMLResponse)
-def index(request: Request, user: User = Depends(get_current_user_from_token)):
-    context = {
-        "user": user,
-        "request": request
-    }
-    return templates.TemplateResponse("private.html", context)
-
-
-# --------------------------------------------------------------------------
-# Login - GET
-# --------------------------------------------------------------------------
-@router.get("/auth/login", response_class=HTMLResponse)
-def login_get(request: Request):
-    context = {
-        "request": request,
-    }
-    return templates.TemplateResponse("login.html", context)
-
-
-# --------------------------------------------------------------------------
-# Login - POST
-# --------------------------------------------------------------------------
 class LoginForm:
     def __init__(self, request: Request):
         self.request: Request = request
@@ -264,14 +166,22 @@ class LoginForm:
         return False
 
 
+@router.get("/auth/login", response_class=HTMLResponse)
+def login_get(request: Request):
+    context = {
+        "request": request,
+    }
+    return templates.TemplateResponse("login.html", context)
+
+
 @router.post("/auth/login", response_class=HTMLResponse)
-async def login_post(request: Request):
+async def login_post(request: Request, session: AsyncSession = Depends(get_async_session)):
     form = LoginForm(request)
     await form.load_data()
     if await form.is_valid():
         try:
             response = RedirectResponse("/", status.HTTP_302_FOUND)
-            login_for_access_token(response=response, form_data=form)
+            await login_for_access_token(response=response, form_data=form, session=session)
             form.__dict__.update(msg="Login Successful!")
             console.log("[green]Login successful!!!!")
             return response
@@ -282,11 +192,10 @@ async def login_post(request: Request):
     return templates.TemplateResponse("login.html", form.__dict__)
 
 
-# --------------------------------------------------------------------------
-# Logout
-# --------------------------------------------------------------------------
-@router.get("/auth/logout", response_class=HTMLResponse)
-def login_get():
-    response = RedirectResponse(url="/")
-    response.delete_cookie(settings.COOKIE_NAME)
-    return response
+@router.get("/private", response_class=HTMLResponse)
+async def private_page(request: Request, user: User = Depends(get_current_user_from_token)):
+    context = {
+        "user": user,
+        "request": request
+    }
+    return templates.TemplateResponse("private.html", context)

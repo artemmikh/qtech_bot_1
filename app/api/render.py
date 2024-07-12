@@ -25,11 +25,11 @@ async def render_all_buttons(request: Request, session: AsyncSession = Depends(g
     buttons = await get_all_buttons(session)
     user = None
     try:
-        user = get_current_user_from_cookie(request)
+        user = await get_current_user_from_cookie(request, session)
     except Exception as e:
         print(f"Error retrieving user from cookie: {e}")
 
-    print(user)
+    print(f'user - {user}')
     context = {
         "request": request,
         "buttons": buttons,
