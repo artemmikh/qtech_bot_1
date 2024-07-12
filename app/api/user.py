@@ -11,27 +11,19 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from rich.console import Console
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 
 from app.core.config import settings
 from app.core.db import get_async_session
 from app.crud.user import get_user
 from app.models.user import User
+from app.core.config import settings
 
 console = Console()
 
 templates = Jinja2Templates(directory="app/templates")
 router = APIRouter()
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-
-class Settings:
-    SECRET_KEY: str = "secret-key"
-    ALGORITHM = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES = 30  # in mins
-    COOKIE_NAME = "access_token"
-
-
-settings = Settings()
 
 
 class OAuth2PasswordBearerWithCookie(OAuth2):

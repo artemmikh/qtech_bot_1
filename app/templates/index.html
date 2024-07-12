@@ -1,27 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
-<br>
-<h1>Home page 🏡</h1>
 
-<p>Welcome to the home page.</p>
-
-{% if user %}
-<h2>You are logged in :)</h2>
-<p>
-  Hi {{ user.email }}! You are logged in, so you can access the private
-  page. <a href="/private">here</a>!
-</p>
-{% else %}
-<h2>You are NOT logged in :(</h2>
-<p>
-  Hello stranger. You are not logged. Please follow the link to
-  <a href="/auth/login" class="btn">login</a>!
-</p>
-{% endif %}
-<a>href="/">Home</a> |
-<a href="/auth/login">Login</a> |
-<a href="/private">Private</a> |
-<a href="/auth/logout">Logout</a>
 <div class="container">
   <h3>Список кнопок</h3>
   <table class="table table-hover">
@@ -52,3 +31,4 @@
   </table>
 </div>
 {% endblock %}
+

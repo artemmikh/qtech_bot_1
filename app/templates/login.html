@@ -1,20 +1,22 @@
-<h1>Login 🫥</h1>
+{% extends "base.html" %}
 
 {% for error in errors %}
-    <p style="color: red">{{ error }}</p>
+<p style="color: red">{{ error }}</p>
 {% endfor %}
-<form action="/auth/login" method="post">
-    <p>
-        <p><label for="">Email</label></p>
-        <input type="email" name="email" value="{{ email }}" required>
-    </p>
-    <p>
-        <p><label for="">Password</label></p>
-        <input type="password" name="password" value="{{ password }}" required>
-    </p>
-    <input type="submit" value="Submit">
-</form>
 
-<hr>
-
-{% include '_site_map.html' %}
+{% block content %}
+<div class="container">
+  <h2 class="text-center">Вход</h2>
+  <form action="/auth/login" method="post" class="mx-auto col-md-6">
+    <div class="form-group">
+      <label for="email">Почта:</label>
+      <input type="text" class="form-control" id="email" name="email" required>
+    </div>
+    <div class="form-group">
+      <label for="password">Пароль:</label>
+      <input type="password" class="form-control" id="password" name="password" required>
+    </div>
+    <button type="submit" class="btn btn-primary btn-block">Войти</button>
+  </form>
+</div>
+{% endblock %}
