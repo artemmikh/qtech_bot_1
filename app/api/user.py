@@ -199,3 +199,10 @@ async def private_page(request: Request, user: User = Depends(get_current_user_f
         "request": request
     }
     return templates.TemplateResponse("private.html", context)
+
+
+@router.get("/auth/logout", response_class=RedirectResponse)
+async def logout(request: Request):
+    response = RedirectResponse(url="/")
+    response.delete_cookie(settings.COOKIE_NAME)
+    return response
