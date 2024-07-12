@@ -1,7 +1,6 @@
 import datetime as dt
 from typing import Dict, List, Optional
 
-from fastapi import APIRouter
 from fastapi import Depends, FastAPI, HTTPException, Request, Response, status
 from fastapi.openapi.models import OAuthFlows as OAuthFlowsModel
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -11,13 +10,8 @@ from fastapi.templating import Jinja2Templates
 from jose import JWTError, jwt
 from passlib.handlers.sha2_crypt import sha512_crypt as crypto
 from pydantic import BaseModel
-from rich import print
+from rich import inspect, print
 from rich.console import Console
-
-from app.core.config import settings
-
-templates = Jinja2Templates(directory="app/templates")
-router = APIRouter()
 
 console = Console()
 
@@ -26,7 +20,7 @@ console = Console()
 # Models and Data
 # --------------------------------------------------------------------------
 class User(BaseModel):
-    email: str
+    username: str
     hashed_password: str
 
 
@@ -38,14 +32,14 @@ class DataBase(BaseModel):
 
 DB = DataBase(
     user=[
-        User(email="user1@gmail.com", hashed_password=crypto.hash("12345")),
-        User(email="user2@gmail.com", hashed_password=crypto.hash("12345")),
+        User(username="user1@gmail.com", hashed_password=crypto.hash("12345")),
+        User(username="user2@gmail.com", hashed_password=crypto.hash("12345")),
     ]
 )
 
 
-def get_user(email: str) -> User:
-    user = [user for user in DB.user if user.email == email]
+def get_user(username: str) -> User:
+    user = [user for user in DB.user if user.username == username]
     if user:
         return user[0]
     return None
@@ -61,7 +55,8 @@ class Settings:
     COOKIE_NAME = "access_token"
 
 
-templates = Jinja2Templates(directory="app/templates")
+app = FastAPI()
+templates = Jinja2Templates(directory="app/test_user_app/templates")
 settings = Settings()
 
 
@@ -128,8 +123,8 @@ def create_access_token(data: Dict) -> str:
     return encoded_jwt
 
 
-def authenticate_user(email: str, plain_password: str) -> User:
-    user = get_user(email)
+def authenticate_user(username: str, plain_password: str) -> User:
+    user = get_user(username)
     if not user:
         return False
     if not crypto.verify(plain_password, user.hashed_password):
@@ -145,14 +140,14 @@ def decode_token(token: str) -> User:
     token = token.removeprefix("Bearer").strip()
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
-        email: str = payload.get("email")
-        if email is None:
+        username: str = payload.get("username")
+        if username is None:
             raise credentials_exception
     except JWTError as e:
         print(e)
         raise credentials_exception
 
-    user = get_user(email)
+    user = get_user(username)
     return user
 
 
@@ -179,15 +174,15 @@ def get_current_user_from_cookie(request: Request) -> User:
     return user
 
 
-@router.post("token")
+@app.post("token")
 def login_for_access_token(
         response: Response,
         form_data: OAuth2PasswordRequestForm = Depends()
 ) -> Dict[str, str]:
-    user = authenticate_user(form_data.email, form_data.password)
+    user = authenticate_user(form_data.username, form_data.password)
     if not user:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect email or password")
-    access_token = create_access_token(data={"email": user.email})
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect username or password")
+    access_token = create_access_token(data={"username": user.username})
 
     # Set an HttpOnly cookie in the response. `httponly=True` prevents
     # JavaScript from reading the cookie.
@@ -202,24 +197,24 @@ def login_for_access_token(
 # --------------------------------------------------------------------------
 # Home Page
 # --------------------------------------------------------------------------
-# @app.get("/", response_class=HTMLResponse)
-# def index(request: Request):
-#     try:
-#         user = get_current_user_from_cookie(request)
-#     except:
-#         user = None
-#     context = {
-#         "user": user,
-#         "request": request,
-#     }
-#     return templates.TemplateResponse("index.html", context)
+@app.get("/", response_class=HTMLResponse)
+def index(request: Request):
+    try:
+        user = get_current_user_from_cookie(request)
+    except:
+        user = None
+    context = {
+        "user": user,
+        "request": request,
+    }
+    return templates.TemplateResponse("index.html", context)
 
 
 # --------------------------------------------------------------------------
 # Private Page
 # --------------------------------------------------------------------------
 # A private page that only logged in users can access.
-@router.get("/private", response_class=HTMLResponse)
+@app.get("/private", response_class=HTMLResponse)
 def index(request: Request, user: User = Depends(get_current_user_from_token)):
     context = {
         "user": user,
@@ -231,7 +226,7 @@ def index(request: Request, user: User = Depends(get_current_user_from_token)):
 # --------------------------------------------------------------------------
 # Login - GET
 # --------------------------------------------------------------------------
-@router.get("/auth/login", response_class=HTMLResponse)
+@app.get("/auth/login", response_class=HTMLResponse)
 def login_get(request: Request):
     context = {
         "request": request,
@@ -246,16 +241,16 @@ class LoginForm:
     def __init__(self, request: Request):
         self.request: Request = request
         self.errors: List = []
-        self.email: Optional[str] = None
+        self.username: Optional[str] = None
         self.password: Optional[str] = None
 
     async def load_data(self):
         form = await self.request.form()
-        self.email = form.get("email")
+        self.username = form.get("username")
         self.password = form.get("password")
 
     async def is_valid(self):
-        if not self.email or not (self.email.__contains__("@")):
+        if not self.username or not (self.username.__contains__("@")):
             self.errors.append("Email is required")
         if not self.password or not len(self.password) >= 4:
             self.errors.append("A valid password is required")
@@ -264,7 +259,7 @@ class LoginForm:
         return False
 
 
-@router.post("/auth/login", response_class=HTMLResponse)
+@app.post("/auth/login", response_class=HTMLResponse)
 async def login_post(request: Request):
     form = LoginForm(request)
     await form.load_data()
@@ -285,7 +280,7 @@ async def login_post(request: Request):
 # --------------------------------------------------------------------------
 # Logout
 # --------------------------------------------------------------------------
-@router.get("/auth/logout", response_class=HTMLResponse)
+@app.get("/auth/logout", response_class=HTMLResponse)
 def login_get():
     response = RedirectResponse(url="/")
     response.delete_cookie(settings.COOKIE_NAME)

@@ -6,13 +6,13 @@ from fastapi.responses import HTMLResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 from starlette.responses import RedirectResponse
+
+from app.api.user import get_current_user_from_cookie
 from app.core.config import settings
 
 from app.core.db import get_async_session
 from app.api.button import (create_button, get_all_buttons,
                             get_button_detail_by_id)
-from app.core.user import current_user
-from app.schemas.user import UserRead
 from app.utils.auxiliary import object_upload
 
 router = APIRouter(tags=['Render Bottons'])
@@ -21,20 +21,21 @@ templates = Jinja2Templates(directory="app/templates")
 
 
 @router.get("/", response_class=HTMLResponse)
-async def render_all_buttons(request: Request,
-                             session: AsyncSession = Depends(get_async_session)
-                             ):
-    context = await get_all_buttons(session)
+async def render_all_buttons(request: Request, session: AsyncSession = Depends(get_async_session)):
+    buttons = await get_all_buttons(session)
+    user = None
+    try:
+        user = get_current_user_from_cookie(request)
+    except Exception as e:
+        print(f"Error retrieving user from cookie: {e}")
 
-    return templates.TemplateResponse("index.html", {"request": request,
-                                                     "context": context,
-                                                     }
-                                      )
-
-
-@router.get("/login")
-async def login_page(request: Request):
-    return templates.TemplateResponse("login.html", {"request": request})
+    print(user)
+    context = {
+        "request": request,
+        "buttons": buttons,
+        "user": user
+    }
+    return templates.TemplateResponse("index.html", context)
 
 
 @router.get("/create", response_class=HTMLResponse)

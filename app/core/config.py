@@ -13,6 +13,14 @@ class Settings(BaseSettings):
     PICTURE_ROOT = os.path.join(MEDIA_ROOT, 'pics')
     DOC_ROOT = os.path.join(MEDIA_ROOT, 'docs')
     secret: str = 'SECRET'
+    ALGORITHM = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES = 30  # in mins
+    COOKIE_NAME = "access_token"
+    SECRET_KEY: str = "secret-key"
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    COOKIE_NAME: str = "access_token"
+    database_url: str
 
     class Config:
         env_file = '.env'

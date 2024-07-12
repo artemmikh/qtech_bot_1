@@ -1,37 +1,54 @@
 {% extends "base.html" %}
 {% block content %}
 <br>
+<h1>Home page 🏡</h1>
+
+<p>Welcome to the home page.</p>
+
+{% if user %}
+<h2>You are logged in :)</h2>
+<p>
+  Hi {{ user.email }}! You are logged in, so you can access the private
+  page. <a href="/private">here</a>!
+</p>
+{% else %}
+<h2>You are NOT logged in :(</h2>
+<p>
+  Hello stranger. You are not logged. Please follow the link to
+  <a href="/auth/login" class="btn">login</a>!
+</p>
+{% endif %}
+<a>href="/">Home</a> |
+<a href="/auth/login">Login</a> |
+<a href="/private">Private</a> |
+<a href="/auth/logout">Logout</a>
 <div class="container">
-    <h3>Список кнопок</h3>
-    <table class="table table-hover">
-        <thead class="thead-light">
-            <tr>
-                <th>Активирована</th>
-                <th>Название кнопки</th>
-                <th>Кнопка департамента</th>
-                <th></th>
-                <th></th>
-            </tr>
-        </thead>
+  <h3>Список кнопок</h3>
+  <table class="table table-hover">
+    <thead class="thead-light">
+    <tr>
+      <th>Активирована</th>
+      <th>Название кнопки</th>
+      <th>Кнопка департамента</th>
+      <th></th>
+      <th></th>
+    </tr>
+    </thead>
 
-        <tbody>
-        {% for item in context %}
-            <tr>
-                <td class="col-md-2">{{ item.is_active }}</td>
-                <td class="col-md-2"><a href="/{{item.id}}" >{{ item.name }}</a></td>
-                <td class="col-md-2">{{ item.is_department }}</td>
-                <td>
-                    <form action= "{{ url_for('delete_item', button_id=item.id) }}" method=post>
-                        <button class="test" type="submit" value="Submit"><img src="/static/general/bin.png" style="width:25%"></button>
-                    </form>
-                </td>
-
-                <td class="col-md-2" align="center"><a href="{{ url_for('update_button_form', button_id=item.id) }}" >
-                    <img src="static/general/edit.png" style="width:15%"></a>
-                </td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
+    <tbody>
+    {% for item in buttons %}
+    <tr>
+      <td class="col-md-2">{{ item.is_active }}</td>
+      <td class="col-md-2"><a href="/{{item.id}}">{{ item.name }}</a></td>
+      <td class="col-md-2">{{ item.is_department }}</td>
+      <td class="col-md-2" align="center"><a href="...">
+        <img src="static/general/bin.png" style="width:15%"></a>
+      <td class="col-md-2" align="center"><a href="{{ url_for('update_button_form', button_id=item.id) }}">
+        <img src="static/general/edit.png" style="width:15%"></a>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
 </div>
 {% endblock %}
