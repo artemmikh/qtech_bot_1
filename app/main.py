@@ -1,7 +1,6 @@
 from fastapi import FastAPI
 from fastapi import HTTPException, Request
 from fastapi.templating import Jinja2Templates
-# Импортируем роутер.
 from starlette.staticfiles import StaticFiles
 
 from app.api.button import router as button
@@ -17,7 +16,6 @@ templates = Jinja2Templates(directory="app/templates")
 async def http_exception_handler(request: Request, exc: HTTPException):
     if exc.detail == "Not authenticated":
         return templates.TemplateResponse("login.html", {"request": request}, status_code=401)
-    # Если другие ошибки, возвращаем стандартный ответ
     return exc
 
 

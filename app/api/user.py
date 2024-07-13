@@ -1,5 +1,6 @@
 import datetime as dt
 from typing import Dict, List, Optional
+import re
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from fastapi.openapi.models import OAuthFlows as OAuthFlowsModel
@@ -8,13 +9,14 @@ from fastapi.security import OAuth2, OAuth2PasswordRequestForm
 from fastapi.security.utils import get_authorization_scheme_param
 from fastapi.templating import Jinja2Templates
 from jose import JWTError, jwt
+from jwt import ExpiredSignatureError
 from passlib.context import CryptContext
 from rich.console import Console
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.db import get_async_session
-from app.core.user import fastapi_users
+from app.core.user import fastapi_users, get_user_manager, UserManager
 from app.crud.user import get_user
 from app.models.user import User
 from app.schemas.user import UserCreate, UserRead
@@ -101,8 +103,12 @@ async def decode_token(token: str, session: AsyncSession) -> User:
         email: str = payload.get("email")
         if email is None:
             raise credentials_exception
-    except JWTError as e:
-        print(e)
+    except ExpiredSignatureError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token has expired."
+        )
+    except JWTError:
         raise credentials_exception
 
     user = await get_user(email, session)
@@ -113,8 +119,14 @@ async def decode_token(token: str, session: AsyncSession) -> User:
 
 async def get_current_user_from_token(token: str = Depends(oauth2_scheme),
                                       session: AsyncSession = Depends(get_async_session)) -> User:
-    user = await decode_token(token, session)
-    return user
+    try:
+        user = await decode_token(token, session)
+        return user
+    except HTTPException as e:
+        raise HTTPException(
+            status_code=e.status_code,
+            detail=e.detail
+        )
 
 
 async def get_current_user_from_cookie(request: Request, session: AsyncSession = Depends(get_async_session)) -> User:
@@ -196,18 +208,9 @@ async def login_post(request: Request, session: AsyncSession = Depends(get_async
             return response
         except HTTPException:
             form.__dict__.update(msg="")
-            form.__dict__.get("errors").append("Incorrect Email or Password")
-            return templates.TemplateResponse("login.html", form.__dict__)
-    return templates.TemplateResponse("login.html", form.__dict__)
-
-
-@router.get("/private", response_class=HTMLResponse)
-async def private_page(request: Request, user: User = Depends(get_current_user_from_token)):
-    context = {
-        "user": user,
-        "request": request
-    }
-    return templates.TemplateResponse("private.html", context)
+            form.__dict__.get("errors").append("Неправильная почта или пароль. Попробуйте снова.")
+            return templates.TemplateResponse("login.html", {"request": request, **form.__dict__})
+    return templates.TemplateResponse("login.html", {"request": request, **form.__dict__})
 
 
 @router.get("/auth/logout", response_class=RedirectResponse)
@@ -226,3 +229,43 @@ async def register_get(
         'request': request
     }
     return templates.TemplateResponse("register.html", context)
+
+
+async def user_create_validator(session, email, password):
+    pattern = r'^[\w\.-]+@[\w\.-]+\.\w+$'
+    if len(password) < 8:
+        return 'Пароль должен быть не менее 8 символов'
+    elif await get_user(email, session) is not None:
+        return 'Пользователь с такой почтой уже существует'
+    elif re.match(pattern, email) is None:
+        return 'Введите корректную почту'
+
+
+@router.post("/register", response_class=HTMLResponse)
+async def register_post(
+        request: Request,
+        session: AsyncSession = Depends(get_async_session),
+        user_manager: UserManager = Depends(get_user_manager),
+        user: User = Depends(get_current_user_from_token)
+
+):
+    form = await request.form()
+    email = form.get("email")
+    password = form.get("password")
+    is_superuser = form.get("is_superuser") == '1'
+
+    error_message = await user_create_validator(session, email, password)
+    if error_message:
+        return templates.TemplateResponse("register.html", {
+            "request": request,
+            "errors": [error_message],
+            'user': user})
+    try:
+        user_create = UserCreate(email=email, password=password, is_superuser=is_superuser)
+        user = await user_manager.create(user_create)
+        return RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)
+    except Exception as e:
+        return templates.TemplateResponse("register.html", {
+            "request": request,
+            "errors": [str(e)],
+            'user': user})
