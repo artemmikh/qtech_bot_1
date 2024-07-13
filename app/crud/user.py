@@ -7,3 +7,9 @@ async def get_user(email: str, session: AsyncSession) -> User:
     result = await session.execute(select(User).where(User.email == email))
     user = result.scalars().first()
     return user
+
+
+async def get_all_users(session: AsyncSession) -> list[User]:
+    result = await session.execute(select(User))
+    users = result.scalars().all()
+    return users

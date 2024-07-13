@@ -17,7 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.core.db import get_async_session
 from app.core.user import fastapi_users, get_user_manager, UserManager
-from app.crud.user import get_user
+from app.crud.user import get_user, get_all_users
 from app.models.user import User
 from app.schemas.user import UserCreate, UserRead
 
@@ -246,7 +246,7 @@ async def register_post(
         request: Request,
         session: AsyncSession = Depends(get_async_session),
         user_manager: UserManager = Depends(get_user_manager),
-        user: User = Depends(get_current_user_from_token)
+        user: User = Depends(get_current_superuser)
 
 ):
     form = await request.form()
@@ -269,3 +269,17 @@ async def register_post(
             "request": request,
             "errors": [str(e)],
             'user': user})
+
+
+@router.get('/all_users', response_class=HTMLResponse)
+async def all_users(
+        request: Request,
+        user: User = Depends(get_current_superuser),
+        session: AsyncSession = Depends(get_async_session)):
+    users = await get_all_users(session=session)
+    context = {
+        'user': user,
+        'request': request,
+        'users': users
+    }
+    return templates.TemplateResponse("users.html", context)
