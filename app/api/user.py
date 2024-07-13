@@ -123,6 +123,17 @@ async def get_current_user_from_cookie(request: Request, session: AsyncSession =
     return user
 
 
+async def get_current_superuser(
+        user: User = Depends(get_current_user_from_token)
+) -> User:
+    if not user.is_superuser:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail='Доступно только суперпользователю'
+        )
+    return user
+
+
 @router.post("/token")
 async def login_for_access_token(
         response: Response,
@@ -204,3 +215,14 @@ async def logout(request: Request):
     response = RedirectResponse(url="/")
     response.delete_cookie(settings.COOKIE_NAME)
     return response
+
+
+@router.get('/register', response_class=HTMLResponse)
+async def register_get(
+        request: Request,
+        user: User = Depends(get_current_superuser), ):
+    context = {
+        'user': user,
+        'request': request
+    }
+    return templates.TemplateResponse("register.html", context)
