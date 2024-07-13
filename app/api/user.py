@@ -11,19 +11,25 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from rich.console import Console
 from sqlalchemy.ext.asyncio import AsyncSession
-from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 
 from app.core.config import settings
 from app.core.db import get_async_session
+from app.core.user import fastapi_users
 from app.crud.user import get_user
 from app.models.user import User
-from app.core.config import settings
+from app.schemas.user import UserCreate, UserRead
 
 console = Console()
 
 templates = Jinja2Templates(directory="app/templates")
 router = APIRouter()
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+router.include_router(
+    fastapi_users.get_register_router(UserRead, UserCreate),
+    prefix='/auth',
+    tags=['auth'],
+)
 
 
 class OAuth2PasswordBearerWithCookie(OAuth2):
