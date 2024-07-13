@@ -17,7 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.core.db import get_async_session
 from app.core.user import fastapi_users, get_user_manager, UserManager
-from app.crud.user import get_user, get_all_users
+from app.crud.user import get_user, get_all_users, user_crud
 from app.models.user import User
 from app.schemas.user import UserCreate, UserRead
 
@@ -263,7 +263,7 @@ async def register_post(
     try:
         user_create = UserCreate(email=email, password=password, is_superuser=is_superuser)
         user = await user_manager.create(user_create)
-        return RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)
+        return RedirectResponse(url="/all_users", status_code=status.HTTP_302_FOUND)
     except Exception as e:
         return templates.TemplateResponse("register.html", {
             "request": request,
@@ -277,6 +277,31 @@ async def all_users(
         user: User = Depends(get_current_superuser),
         session: AsyncSession = Depends(get_async_session)):
     users = await get_all_users(session=session)
+    context = {
+        'user': user,
+        'request': request,
+        'users': users
+    }
+    return templates.TemplateResponse("users.html", context)
+
+
+@router.post('/delete_user/{user_id}', response_class=RedirectResponse)
+async def delete_user(
+        user_id: int,
+        request: Request,
+        user: User = Depends(get_current_superuser),
+        session: AsyncSession = Depends(get_async_session)
+):
+    users = await get_all_users(session=session)
+    current_user = await user_crud.get(user_id, session)
+    if not current_user:
+        return templates.TemplateResponse("users.html", {
+            "request": request,
+            "errors": ['Пользователя не существует. Обновите страницу'],
+            'user': user, })
+
+    await user_crud.remove(current_user, session)
+
     context = {
         'user': user,
         'request': request,

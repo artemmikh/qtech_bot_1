@@ -2,7 +2,16 @@
 {% block content %}
 
 <div class="container">
+  <p></p>
   <h3>Список администраторов</h3>
+  <p></p>
+  {% if errors %}
+  <div class="alert alert-danger">
+    {% for error in errors %}
+    <p>{{ error }}</p>
+    {% endfor %}
+  </div>
+  {% endif %}
   <table class="table table-hover">
     <thead class="thead-light">
     <tr>
@@ -17,11 +26,13 @@
     {% for user in users %}
     <tr>
       <td class="col-md-2">{{ user.email }}</td>
-      <td class="col-md-2">{{ user.is_superuser }}</td>
-      <td class="col-md-2" align="center"><a href="...">
-        <img src="static/general/bin.png" style="width:15%"></a>
-      <td class="col-md-2" align="center"><a href="">
-        <img src="static/general/edit.png" style="width:15%"></a>
+      <td class="col-md-2">{{ "Да" if user.is_superuser else "Нет" }}</td>
+      <td class="col-md-2" align="center">
+        <form action="/delete_user/{{ user.id }}" method="post">
+          <button type="submit" class="btn btn-danger btn-sm">Удалить</button>
+        </form>
+      </td>
+      <td class="col-md-2" align="center">
       </td>
     </tr>
     {% endfor %}
@@ -29,4 +40,3 @@
   </table>
 </div>
 {% endblock %}
-
