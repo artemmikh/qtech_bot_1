@@ -6,11 +6,14 @@ from fastapi.responses import HTMLResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 from starlette.responses import RedirectResponse
+
+from app.api.user import get_current_user_from_cookie, get_current_user_from_token
 from app.core.config import settings
 
 from app.core.db import get_async_session
 from app.api.button import (create_button, get_all_buttons,
-                            get_button_detail_by_id, delete_button)
+                            get_button_detail_by_id)
+from app.models import User
 from app.utils.auxiliary import object_upload
 from app.forms.button import ButtonForm
 
@@ -20,24 +23,33 @@ templates = Jinja2Templates(directory="app/templates")
 
 
 @router.get("/", response_class=HTMLResponse)
-async def render_all_buttons(request: Request,
-                             session: AsyncSession = Depends(get_async_session)
-                             ):
-    context = await get_all_buttons(session)
+async def render_all_buttons(
+        request: Request,
+        session: AsyncSession = Depends(get_async_session),
+        user: User = Depends(get_current_user_from_token)):
+    buttons = await get_all_buttons(session)
+    user = None
+    try:
+        user = await get_current_user_from_cookie(request, session)
+    except Exception as e:
+        print(f"Error retrieving user from cookie: {e}")
 
-    return templates.TemplateResponse("index.html", {"request": request,
-                                                     "context": context,
-                                                     }
-                                      )
+    context = {
+        "request": request,
+        "buttons": buttons,
+        "user": user
+    }
+    return templates.TemplateResponse("index.html", context)
 
 
 @router.get("/create", response_class=HTMLResponse)
 async def get_button_form(request: Request,
-                          ):
-    return templates.TemplateResponse("form.html", {"request": request,
-                                                    "context": None,
-                                                    }
-                                      )
+                          user: User = Depends(get_current_user_from_token)):
+    context = {
+        "request": request,
+        "user": user
+    }
+    return templates.TemplateResponse("form.html", context)
 
 
 @router.post("/create")
@@ -104,16 +116,16 @@ async def get_button_detail(request: Request,
                                       )
 
 
-@router.get("/", response_class=HTMLResponse)
-async def render_all_buttons(request: Request,
-                             session: AsyncSession = Depends(get_async_session)
-                             ):
-    context = await get_all_buttons(session)
-
-    return templates.TemplateResponse("index.html", {"request": request,
-                                                     "context": context,
-                                                     }
-                                      )
+# @router.get("/", response_class=HTMLResponse)
+# async def render_all_buttons(request: Request,
+#                              session: AsyncSession = Depends(get_async_session)
+#                              ):
+#     context = await get_all_buttons(session)
+#
+#     return templates.TemplateResponse("index.html", {"request": request,
+#                                                      "context": context,
+#                                                      }
+#                                       )
 
 
 @router.get("/update/{button_id}", response_class=HTMLResponse)

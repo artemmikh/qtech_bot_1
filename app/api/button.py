@@ -3,6 +3,10 @@ import os
 from app.core.config import settings
 from fastapi import APIRouter, Depends, UploadFile, File
 from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi.security import OAuth2PasswordBearer
+
+from app.core.user import current_user
+from app.models import User
 from app.schemas.button import ButtonBase
 from app.core.db import get_async_session
 from app.crud.button import button_crud
@@ -11,6 +15,7 @@ from app.utils.auxiliary import object_upload, object_delete
 router = APIRouter(
     tags=['API Bottons']
 )
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/jwt/login")
 
 
 @router.post(
@@ -25,6 +30,7 @@ async def create_button(
         file_pic: list[UploadFile] = File(...),
         file_doc: list[UploadFile] = File(...),
         session: AsyncSession = Depends(get_async_session),
+        
 ):
     picture = ' '.join(object_upload(settings.PICTURE_ROOT, settings.BASE_DIR, file_pic))
     file = ' '.join(object_upload(settings.DOC_ROOT, settings.BASE_DIR, file_doc))
@@ -68,8 +74,8 @@ async def get_button_detail_by_id(
     response_model_exclude_none=True,
 )
 async def delete_button(
-    button_id: int,
-    session: AsyncSession = Depends(get_async_session),
+        button_id: int,
+        session: AsyncSession = Depends(get_async_session),
 ) -> None:
     button = await button_crud.get(button_id, session)
 
