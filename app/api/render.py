@@ -12,7 +12,7 @@ from app.core.config import settings
 
 from app.core.db import get_async_session
 from app.api.button import (create_button, get_all_buttons,
-                            get_button_detail_by_id)
+                            get_button_detail_by_id, delete_button)
 from app.models import User
 from app.utils.auxiliary import object_upload
 from app.forms.button import ButtonForm
@@ -44,7 +44,8 @@ async def render_all_buttons(
 
 @router.get("/create", response_class=HTMLResponse)
 async def get_button_form(request: Request,
-                          user: User = Depends(get_current_user_from_token)):
+                          user: User = Depends(get_current_user_from_token)
+                          ):
     context = {
         "request": request,
         "user": user
@@ -62,10 +63,9 @@ async def post_button_form(
         is_active: bool = Form(...),
         file_pic: list[UploadFile] = None,
         file_doc: list[UploadFile] = None,
-
+        user: User = Depends(get_current_user_from_token),
         session: AsyncSession = Depends(get_async_session),
 ):
-
     form = ButtonForm(request)
     await form.load_data()
     if await form.is_valid():
@@ -88,6 +88,7 @@ async def post_button_form(
             'is_department': is_department,
             'is_active': is_active,
             'file_doc': file_doc,
+            'user': user,
         }
         return templates.TemplateResponse("form.html", {"request": request,
                                                         "errors": errors,
@@ -99,7 +100,8 @@ async def post_button_form(
 @router.get("/{button_id}", response_class=HTMLResponse)
 async def get_button_detail(request: Request,
                             button_id: int,
-                            session: AsyncSession = Depends(get_async_session)
+                            session: AsyncSession = Depends(get_async_session),
+                            user: User = Depends(get_current_user_from_token)
                             ):
     context = await get_button_detail_by_id(button_id, session)
 
@@ -112,26 +114,16 @@ async def get_button_detail(request: Request,
     return templates.TemplateResponse("button_detail.html",
                                       {"request": request,
                                        "context": context,
-                                       }
+                                       'user': user
+                                       },
                                       )
-
-
-# @router.get("/", response_class=HTMLResponse)
-# async def render_all_buttons(request: Request,
-#                              session: AsyncSession = Depends(get_async_session)
-#                              ):
-#     context = await get_all_buttons(session)
-#
-#     return templates.TemplateResponse("index.html", {"request": request,
-#                                                      "context": context,
-#                                                      }
-#                                       )
 
 
 @router.get("/update/{button_id}", response_class=HTMLResponse)
 async def update_button_form(request: Request,
                              button_id: int,
-                             session: AsyncSession = Depends(get_async_session)
+                             session: AsyncSession = Depends(get_async_session),
+                             user: User = Depends(get_current_user_from_token)
                              ):
     context = await get_button_detail_by_id(button_id, session)
 
@@ -143,7 +135,8 @@ async def update_button_form(request: Request,
 
     return templates.TemplateResponse("form_patch.html", {"request": request,
                                                           "context": context,
-                                                          'button_id': button_id
+                                                          'button_id': button_id,
+                                                          'user': user
                                                           }
                                       )
 
@@ -159,6 +152,7 @@ async def update_button_form(
         file_pic: list[UploadFile] = File(...),
         file_doc: list[UploadFile] = File(...),
         session: AsyncSession = Depends(get_async_session),
+        user: User = Depends(get_current_user_from_token)
 ):
     button = await get_button_detail_by_id(button_id, session)
     button.name = name
@@ -193,6 +187,7 @@ async def del_button_picture(
         button_id: int,
         picture: str,
         session: AsyncSession = Depends(get_async_session),
+        user: User = Depends(get_current_user_from_token)
 ):
     button = await get_button_detail_by_id(button_id, session)
 
@@ -221,6 +216,7 @@ async def del_button_file(
         button_id: int,
         file: str,
         session: AsyncSession = Depends(get_async_session),
+        user: User = Depends(get_current_user_from_token)
 ):
     button = await get_button_detail_by_id(button_id, session)
 
@@ -247,7 +243,8 @@ async def del_button_file(
 )
 async def delete_item(
         button_id: int,
-        session: AsyncSession = Depends(get_async_session)
+        session: AsyncSession = Depends(get_async_session),
+        user: User = Depends(get_current_user_from_token)
 ):
     await delete_button(button_id=button_id, session=session)
 
