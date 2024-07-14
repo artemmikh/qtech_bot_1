@@ -2,12 +2,13 @@ import datetime as dt
 from typing import Dict, List, Optional
 import re
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from fastapi import APIRouter, Depends, Request, Response, status
 from fastapi.openapi.models import OAuthFlows as OAuthFlowsModel
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.security import OAuth2, OAuth2PasswordRequestForm
 from fastapi.security.utils import get_authorization_scheme_param
 from fastapi.templating import Jinja2Templates
+from fastapi.exceptions import HTTPException
 from jose import JWTError, jwt
 from jwt import ExpiredSignatureError
 from passlib.context import CryptContext
@@ -109,7 +110,7 @@ async def decode_token(token: str, session: AsyncSession) -> User:
             detail="Token has expired."
         )
     except JWTError:
-        raise credentials_exception
+        raise TypeError
 
     user = await get_user(email, session)
     if user is None:
@@ -117,15 +118,16 @@ async def decode_token(token: str, session: AsyncSession) -> User:
     return user
 
 
-async def get_current_user_from_token(token: str = Depends(oauth2_scheme),
-                                      session: AsyncSession = Depends(get_async_session)) -> User:
+async def get_current_user_from_token(request: Request,
+                                      token: str = Depends(oauth2_scheme),
+                                      session: AsyncSession = Depends(get_async_session), ) -> User:
     try:
         user = await decode_token(token, session)
         return user
-    except HTTPException as e:
+    except TypeError as e:
         raise HTTPException(
-            status_code=e.status_code,
-            detail=e.detail
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated"
         )
 
 
