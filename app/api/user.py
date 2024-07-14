@@ -276,12 +276,15 @@ async def all_users(
         request: Request,
         user: User = Depends(get_current_superuser),
         session: AsyncSession = Depends(get_async_session)):
-    users = await get_all_users(session=session)
+    all_users = await get_all_users(session=session)
+    users = [u for u in all_users if u.id != user.id]
+
     context = {
         'user': user,
         'request': request,
         'users': users
     }
+
     return templates.TemplateResponse("users.html", context)
 
 
