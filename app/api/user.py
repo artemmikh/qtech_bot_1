@@ -19,7 +19,7 @@ from app.core.db import get_async_session
 from app.core.user import fastapi_users, get_user_manager, UserManager
 from app.crud.user import get_user, get_all_users, user_crud
 from app.models.user import User
-from app.schemas.user import UserCreate, UserRead
+from app.schemas.user import UserCreate, UserRead, UserUpdate
 
 console = Console()
 
@@ -308,3 +308,60 @@ async def delete_user(
         'users': users
     }
     return templates.TemplateResponse("users.html", context)
+
+
+@router.get('/change_password', response_class=RedirectResponse)
+async def change_password(
+        request: Request,
+        user: User = Depends(get_current_user_from_token),
+        session: AsyncSession = Depends(get_async_session)):
+    context = {
+        'user': user,
+        'request': request
+    }
+    return templates.TemplateResponse("change_password.html", context)
+
+
+async def user_update_validator(
+        user: User,
+        old_password: str,
+        new_password: str,
+        confirm_password: str) -> str:
+    if not pwd_context.verify(old_password, user.hashed_password):
+        return "Старый пароль неверен"
+    if new_password != confirm_password:
+        return "Новый и старый пароли не совпадают"
+    if len(new_password) < 8:
+        return 'Пароль должен быть не менее 8 символов'
+
+
+@router.post('/change_password', response_class=RedirectResponse)
+async def change_password_post(
+        request: Request,
+        user_manager: UserManager = Depends(get_user_manager),
+        session: AsyncSession = Depends(get_async_session),
+        user: User = Depends(get_current_user_from_token)
+):
+    form = await request.form()
+    old_password = form.get("old_password")
+    new_password = form.get("new_password")
+    confirm_password = form.get("confirm_password")
+
+    error_message = await user_update_validator(user, old_password, new_password, confirm_password)
+    if error_message:
+        return templates.TemplateResponse("register.html", {
+            "request": request,
+            "errors": [error_message],
+            'user': user})
+    try:
+        user_update = UserUpdate(password=new_password)
+        user = await user_manager.update(user_update, user=user)
+        return templates.TemplateResponse("change_password.html", {
+            "request": request,
+            "successful_password_change": ['Пароль изменён'],
+            'user': user})
+    except Exception as e:
+        return templates.TemplateResponse("change_password.html", {
+            "request": request,
+            "errors": [str(e)],
+            'user': user})
