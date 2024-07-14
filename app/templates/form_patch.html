@@ -92,5 +92,14 @@
   </div>
 </div>
 
+<script src="/static/ckeditor/build/ckeditor.js"></script>
+
+<script>
+  ClassicEditor
+    .create(document.querySelector('#text'))
+    .catch(error => {
+      console.error(error);
+    });
+</script>
 
 {% endblock %}
