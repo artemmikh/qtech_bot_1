@@ -3,6 +3,8 @@ from typing import Optional, List
 from fastapi import Request, UploadFile, File
 
 
+IMAGE_FILE_FORMAT = {'jpeg', 'png', 'webp', 'tiff', 'svg', 'gif', 'heif', 'jpg'}
+
 class ButtonForm:
     def __init__(self, request: Request):
         self.request: Request = request
@@ -31,7 +33,9 @@ class ButtonForm:
         if not self.text or not len(self.name) >= 0:
             self.errors.append('Кнопка должна содержать текст')
         if len(self.text) > 1024:
-            self.errors.append('Количество символов не должно быть более 1024') 
+            self.errors.append('Количество символов не должно быть более 1024')
+        if self.file_pic.filename.split('.')[-1].lower() not in IMAGE_FILE_FORMAT:
+            self.errors.append('В разделе картинки нужно прикрепить верный файл с расширениями: jpeg, png, webp, tiff, svg, gif, heif, jpg')
 
         if not self.errors:
             return True
