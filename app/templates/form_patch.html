@@ -1,95 +1,77 @@
 {% extends "base.html" %}
 {% block content %}
+
 <br>
-<div class="container">
-  <form class="form-horizontal card col-8" action="/update/{{button_id}}" method="POST" enctype="multipart/form-data">
+<div class="container my-5 d-flex justify-content-center">
+  <form class="form-horizontal card col-8" method="POST" enctype="multipart/form-data">
     <div class="card-header">
-      <h3>Редактирование кнопки - {{ context.name }}</h3>
+      <h3>Редактирование информационной кнопки</h3>
     </div>
 
-    <div class="form-group ">
+    <br>
+    <div class="container">
+      <div class="row">
+        <div class="text-danger font-weight-bold">
+          <ul>
+            {% for error in errors %}
+            <li class="alert alert-danger">
+              {{error}}
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group">
       <label for="name">Название кнопки:</label>
-      <input type = "text" name = "name" id='name' placeholder = "Name" class="form-control" value="{{context.name}}"/>
+      <input type="text" class="form-control col-sm-12 invalidInput" name="name" id="name" placeholder="Название кнопки"
+             value="{{ context.name }}" required/>
     </div>
 
     <div class="form-group">
-      <label for="is_moscow">Локация (москва/немосква)</label>
-        <select class="form-control" name="is_moscow" id="is_moscow" >
-          <option> {{ context.is_moscow }} </option>
-          <option>{{ not context.is_moscow }}</option>
-        </select>
+      <label for="is_moscow">Кнопка для посещающих московский офис:</label>
+      <select class="form-control" name="is_moscow" id="is_moscow">
+        <option value="True" {% if context.is_moscow %} selected {% endif %}>Да</option>
+        <option value="False" {% if not context.is_moscow %} selected {% endif %}>Нет</option>
+      </select>
     </div>
 
     <div class="form-group">
-      <label for="is_department">Кнопка контактов</label>
-        <select class="form-control" name="is_department" id="is_department">
-          <option> {{ context.is_department }} </option>
-          <option>{{ not context.is_department }}</option>
-        </select>
+      <label for="is_department">Кнопка контактов:</label>
+      <select class="form-control" name="is_department" id="is_department">
+        <option value="True" {% if context.is_department %} selected {% endif %}>Да</option>
+        <option value="False" {% if not context.is_department %} selected {% endif %}>Нет</option>
+      </select>
     </div>
 
     <div class="form-group">
-      <label for="text">Информационное сообщение:</label>
-      <textarea class="form-control" name="text" id="text" rows="10" required> {{ context.text }}</textarea>
+      <label for="text">Текст по нажатию кнопки:</label>
+      <textarea class="form-control" name="text" id="text" placeholder="">{{ context.text }}</textarea>
     </div>
 
     <div class="form-group">
-      <label for="is_active">Активировать кнопку</label>
-        <select class="form-control" name="is_active" id="is_active">
-          <option> {{ context.is_active }} </option>
-          <option>{{ not context.is_active }}</option>
-        </select>
+      <label for="is_active">Активировать кнопку:</label>
+      <select class="form-control" name="is_active" id="is_active">
+        <option value="True" {% if context.is_active %} selected {% endif %}>Да</option>
+        <option value="False" {% if not context.is_active %} selected {% endif %}>Нет</option>
+      </select>
     </div>
 
     <div class="form-group">
-      <button type="submit" class="btn btn-default">Сохранить</button>
-    </div>
-
-    <div class="form-group">
-      <label for="file_pic">Выберите картинку для загрузки</label>
+      <label for="file_pic">Выберите картинку для загрузки:</label>
       <input type="file" id="file_pic" name="file_pic" multiple/>
     </div>
 
     <div class="form-group">
-      <label for="file_doc">Выберите файл для загрузки</label>
+      <label for="file_doc">Выберите файл для загрузки:</label>
       <input type="file" id="file_doc" name="file_doc" multiple/>
     </div>
-  </form>
 
-  <div class="form-horizontal card col-8">
-    <p>
-    {% if context.picture %}
-    <h4>Удаление картинок</h4>
-    <br>
-      {% for pic in context.picture %}
-      <form action= "{{ url_for('del_button_picture', button_id=context.id, picture=pic.split('\\')[-1]) }}" method=post>
-        <button class="test" type="submit" value="Submit"><img src="/static/general/bin.png" style="width:25%"></button>
-        <img src={{pic}} alt="Picture" width=20% class="img-thumbnail">
-      </form>
-      {% endfor %}
-    {% endif %}
-    </p>
-  </div>
-
-  <div class="form-horizontal card col-8">
     <div class="form-group">
-      <p>
-      {% if context.file %}
-      <h4>Удаление файлов</h4>
-      <div class="row g-4 py-5 row-cols-1 row-cols-lg-3">
-      {% for doc in context.file %}
-      <form action= "{{ url_for('del_button_file', button_id=context.id, file=doc.split('\\')[-1]) }}" method=post>
-        <a href="{{doc}}" >
-          {{ doc.split('\\')[-1] }}
-        </a>
-        <button class="test" type="submit" value="Submit"><img src="/static/general/bin.png" style="width:25%"></button>
-      </form>
-      {% endfor %}
-      </div>
-      {% endif %}
-      </p>
+      <button type="submit" class="btn btn-success">Сохранить</button>
     </div>
-  </div>
+  </form>
 </div>
 
 <script src="/static/ckeditor/build/ckeditor.js"></script>
@@ -97,6 +79,9 @@
 <script>
   ClassicEditor
     .create(document.querySelector('#text'))
+    .then(editor => {
+      editor.setData('{{ context.text | safe }}');
+    })
     .catch(error => {
       console.error(error);
     });

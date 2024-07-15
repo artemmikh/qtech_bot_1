@@ -1,36 +1,37 @@
 <!DOCTYPE html>
 <style>
-.sign {float: left; /* Выравнивание по правому краю */
+  .sign {
+    float: left; /* Выравнивание по правому краю */
     border: 0px solid #333; /* Параметры рамки */
     padding: 0px; /* Поля внутри блока */
-    margin: 0px 0px 0px 0px;  /* Отступы вокруг */
+    margin: 0px 0px 0px 0px; /* Отступы вокруг */
     background: #f0f0f0; /* Цвет фона */
     text-align: center; /* Выравнивание по центру */
-   }
+  }
 
-.test{
+  .test {
     float: inline-start;
     padding: 0;
     border: none;
     background: none;
     width: 100px;
     height: 26px;
-    }
+  }
 
 </style>
 <html lang="ru">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link href="{{ url_for('static', path='/css/bootstrap.min.css') }}" rel="stylesheet">
-  </head>
-  <div class="container">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="{{ url_for('static', path='/css/bootstrap.min.css') }}" rel="stylesheet">
+</head>
+<div class="container">
   <body>
-    {% include "header.html" %}
-    {% block content %}{% endblock content %}
+  {% include "header.html" %}
+  {% block content %}{% endblock content %}
   <footer>
     {% include "footer.html" %}
   </footer>
   </body>
-  </div>
+</div>
 </html>

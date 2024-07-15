@@ -3,7 +3,7 @@
 
 <div class="container">
 
-    <h1> {{ context.name }} </h1>
+    <h3 class="mt-5 mb-3">Имя кнопки: {{ context.name }}</h3>
 
     <a class="test" href="{{ url_for('update_button_form', button_id=context.id) }}" ><img src="static/general/edit.png" style="width:30%"></a>
 
@@ -14,9 +14,9 @@
     <br>
     <br>
 
-    <p style="color:grey;">Кнопка активирована: {{ context.is_active }}</p>
-    <p style="color:grey;">Кнопка для Москвы: {{ context.is_moscow }}</p>
-    <p style="color:grey;">Кнопка отдела: {{ context.is_department }}</p>
+    <p style="color:#16181b;">Кнопка активирована: {{ "Да" if context.is_active else "Нет" }}</p>
+    <p style="color:#16181b;">Кнопка для посещающих московский офис: {{ "Да" if context.is_moscow else "Нет" }}</p>
+    <p style="color:#16181b;">Кнопка отдела: {{ "Да" if context.is_department else "Нет" }}</p>
 
     {% if context.picture %}
     <h4>Картинки</h4>
@@ -27,7 +27,7 @@
     </div>
     {% endif %}
 
-    <p style="color:grey;">Текст по нажатию кнопки:</p>
+    <p style="color:#16181b;">Текст по нажатию кнопки:</p>
     <p>{{ context.text | safe }}</p>
 
     <p>
