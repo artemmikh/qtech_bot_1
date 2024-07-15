@@ -2,10 +2,10 @@ import re
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ParseMode
 
-from utils import form_media_group
+from utils import form_media_group, delete_messages_from_chat
 from const import NEW_EMPLOYEE, OLD_EMPLOYEE, MOSCOW_NO, MOSCOW_YES
 from db import session, Button
-from telegram.error import TelegramError
+
 
 def clean_unsupported_tags_from_html(text):
     """
@@ -25,19 +25,9 @@ def start_handler(update, context):
     query = update.callback_query
     if query:
         query.answer()
-    """ удалить документы из истории, если нажата кнопка в начало
-
-    if 'my_docs_ids' in context.user_data and context.user_data['my_docs_ids']:
-        print('mes_ids: ', context.user_data['my_docs_ids'])
-        for mes_id in context.user_data['my_docs_ids']:
-            try:
-                context.bot.delete_message(chat_id=update.effective_chat.id, message_id=mes_id)
-            except TelegramError:
-                pass
-        context.user_data['my_docs_ids'] = []
-
-    удалить документы из истории, если нажата кнопка в начало"""
-
+    
+    context = delete_messages_from_chat(update, context)
+   
     keyboard = [
         [InlineKeyboardButton(
             'Я новый сотрудник',
@@ -196,27 +186,20 @@ def button_text_picture_doc_handler(update, context):
     if button.picture:
         media_group = form_media_group(doc_paths=button.picture, media_type='photo')
         mes = context.bot.send_media_group(chat_id=update.effective_chat.id, media=media_group)
-        #print('mes: ', mes)
-        #print(mes[-1].message_id)
         for picture in mes:
-            #print(picture.message_id)
             ids.append(picture.message_id)
     elif button.file:
         media_group = form_media_group(doc_paths=button.file, media_type='doc')
         docs = context.bot.send_media_group(chat_id=update.effective_chat.id, media=media_group)
         for doc in docs:
-            #print(doc.message_id)
             ids.append(doc.message_id)
             
-    
-    #print('*' * 100)
-    #print('query: ', query)
     try:
         context.bot.delete_message(chat_id=update.effective_chat.id, message_id=query.message['message_id']) # удаляем клавиатуру
     except TelegramError:
         pass
     context.bot.send_message(chat_id=update.effective_chat.id, text=message, reply_markup=reply_markup)  
-    context.user_data['my_docs_ids'] = ids # отдаем id сообщений в контекст, чтоб получить к ним доступ и удалить в других хэндлерах
+    context.user_data['pics_or_docs_ids'] = ids # отдаем id сообщений в контекст, чтоб получить к ним доступ и удалить в других хэндлерах
     
 
 
@@ -225,22 +208,7 @@ def back_to_previous_handler(update, context):
     query = update.callback_query
     query.answer()
 
-    
-    #print('query: ', query)
-    #print('context.user_data', context.user_data)
-    
-    """ удалить документы из истории, если нажата кнопка назад
-
-    if 'my_docs_ids' in context.user_data and context.user_data['my_docs_ids']:
-        print('mes_ids: ', context.user_data['my_docs_ids'])
-        for mes_id in context.user_data['my_docs_ids']:
-            try:
-                context.bot.delete_message(chat_id=update.effective_chat.id, message_id=mes_id)
-            except TelegramError:
-                pass
-        context.user_data['my_docs_ids'] = []
-
-    удалить документы из истории, если нажата кнопка назад""" 
+    context = delete_messages_from_chat(update, context)
 
     previous_handler_name = context.user_data.get('previous')
     if previous_handler_name:
