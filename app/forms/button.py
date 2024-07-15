@@ -26,8 +26,8 @@ class ButtonForm:
         self.file_doc = form.get('file_doc')
 
     async def is_valid(self):
-        if not self.name or not len(self.name) > 2:
-            self.errors.append('Название кнопки должно содержать минимум 5 символов')
+        if not self.name or not len(self.name) > 1:
+            self.errors.append('Название кнопки должно содержать минимум 2 символа')
         if not self.text or not len(self.name) >= 0:
             self.errors.append('Кнопка должна содержать текст')
 
