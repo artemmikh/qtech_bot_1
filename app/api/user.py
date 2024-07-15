@@ -296,7 +296,6 @@ async def delete_user(
         user: User = Depends(get_current_superuser),
         session: AsyncSession = Depends(get_async_session)
 ):
-    users = await get_all_users(session=session)
     current_user = await user_crud.get(user_id, session)
     if not current_user:
         return templates.TemplateResponse("users.html", {
@@ -305,6 +304,7 @@ async def delete_user(
             'user': user, })
 
     await user_crud.remove(current_user, session)
+    users = await get_all_users(session=session)
 
     context = {
         'user': user,
