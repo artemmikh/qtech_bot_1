@@ -46,11 +46,9 @@ async def render_all_buttons(
 async def get_button_form(request: Request,
                           user: User = Depends(get_current_user_from_token)
                           ):
-    context = {
-        "request": request,
-        "user": user
-    }
-    return templates.TemplateResponse("form.html", context)
+    return templates.TemplateResponse("form.html", {"request": request,
+                                                    "context": None,
+                                                    'user': user})
 
 
 @router.post("/create")
