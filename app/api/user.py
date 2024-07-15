@@ -278,8 +278,7 @@ async def all_users(
         request: Request,
         user: User = Depends(get_current_superuser),
         session: AsyncSession = Depends(get_async_session)):
-    all_users = await get_all_users(session=session)
-    users = [u for u in all_users if u.id != user.id]
+    users = await get_all_users(session=session)
 
     context = {
         'user': user,
