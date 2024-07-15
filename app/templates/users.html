@@ -29,7 +29,7 @@
         {% if user.id == item.id %}
         <span>Это вы</span>
         {% else %}
-        <form action="/delete_user/{{ user.id }}" method="post" onsubmit="return confirmDeletion()">
+        <form action="/delete_user/{{ item.id }}" method="post" onsubmit="return confirmDeletion()">
           <button type="submit" class="btn btn-danger btn-sm">Удалить</button>
         </form>
         {% endif %}
