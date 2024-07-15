@@ -30,7 +30,10 @@
     </div>
 
     <div class="form-group">
-      <label for="is_moscow">Кнопка для посещающих московский офис:</label>
+      <label for="is_moscow">Кнопка для посещающих московский офис
+        <span class="info-icon" data-toggle="tooltip"
+              title="Если вы выберете «Да», кнопка будет видна только тем сотрудникам, которые в интерфейсе телеграм бота отметили, что посещают офис в Москве">ℹ️</span>
+      </label>
       <select class="form-control" name="is_moscow" id="is_moscow">
         <option value="True" {% if context.is_moscow %} selected {% endif %}>Да</option>
         <option value="False" {% if not context.is_moscow %} selected {% endif %}>Нет</option>
@@ -38,7 +41,10 @@
     </div>
 
     <div class="form-group">
-      <label for="is_department">Кнопка контактов:</label>
+      <label for="is_department">Кнопка отделов
+        <span class="info-icon" data-toggle="tooltip"
+              title="В телеграм боте есть кнопка «К кому обращаться?». Созданная кнопка попадёт в этот раздел, если вы выберете «Да»">ℹ️</span>
+      </label>
       <select class="form-control" name="is_department" id="is_department">
         <option value="True" {% if context.is_department %} selected {% endif %}>Да</option>
         <option value="False" {% if not context.is_department %} selected {% endif %}>Нет</option>
@@ -46,12 +52,18 @@
     </div>
 
     <div class="form-group">
-      <label for="text">Текст по нажатию кнопки:</label>
+      <label for="text">Текст по нажатию кнопки:
+        <span class="info-icon" data-toggle="tooltip"
+              title="Пользователь увидит этот текст, когда нажмет на кнопку">ℹ️</span>
+      </label>
       <textarea class="form-control" name="text" id="text" placeholder="">{{ context.text }}</textarea>
     </div>
 
     <div class="form-group">
-      <label for="is_active">Активировать кнопку:</label>
+      <label for="is_active">Активировать кнопку
+        <span class="info-icon" data-toggle="tooltip"
+              title="Это поле нужно для того чтобы ограничить попадание кнопки в телеграм бота. Если вы выберете «Нет», кнопка не отобразится в боте, но будет доступна в админ-зоне для редактирования">ℹ️</span>
+      </label>
       <select class="form-control" name="is_active" id="is_active">
         <option value="True" {% if context.is_active %} selected {% endif %}>Да</option>
         <option value="False" {% if not context.is_active %} selected {% endif %}>Нет</option>
@@ -59,12 +71,18 @@
     </div>
 
     <div class="form-group">
-      <label for="file_pic">Выберите картинку для загрузки:</label>
+      <label for="file_pic">Выберите картинку для загрузки
+        <span class="info-icon" data-toggle="tooltip"
+              title="Картинка будет показана по нажатию кнопки вместе с текстом кнопки">ℹ️</span>
+      </label>
       <input type="file" id="file_pic" name="file_pic" multiple/>
     </div>
 
     <div class="form-group">
-      <label for="file_doc">Выберите файл для загрузки:</label>
+      <label for="file_doc">Выберите файл для загрузки
+        <span class="info-icon" data-toggle="tooltip"
+              title="Файл будет показан по нажатию кнопки вместе с текстом кнопки">ℹ️</span>
+      </label>
       <input type="file" id="file_doc" name="file_doc" multiple/>
     </div>
 
