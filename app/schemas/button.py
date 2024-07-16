@@ -2,20 +2,6 @@ from datetime import datetime
 from pydantic import BaseModel, Field
 from typing import Optional
 
-"""
-class ButtonBase(BaseModel):
-    id: int
-    name: str
-    location: bool
-    message: str
-    picture: str
-    is_active: bool
-    created_date: datetime
-
-    class Config:
-        orm_mode = True
-"""
-
 
 class ButtonDatabase(BaseModel):
     id: int

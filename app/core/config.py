@@ -10,6 +10,8 @@ _STATIC_DOC_DIR = 'static/media/docs/'
 _STATIC_PICTURE_ROOT = os.path.join(_BASE_DIR, _STATIC_PICTURE_DIR)
 _STATIC_DOC_ROOT = os.path.join(_BASE_DIR, _STATIC_DOC_DIR)
 
+URL_DOMAIN = 'http://127.0.0.1:8000'
+
 
 class Settings(BaseSettings):
     app_title: str = 'Input title in .env'

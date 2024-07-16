@@ -1,14 +1,14 @@
-# from datetime import datetime
 from typing import Optional
 
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.button import Button
+from app.models.user import User
 from app.crud.button import button_crud
+from app.crud.user import user_crud
 
 
-# Может быть добавлена при создании и изменении button
 async def check_buttons_name_duplicate(
     button_name: str,
     session: AsyncSession,
@@ -44,3 +44,33 @@ async def check_button_exists(
             detail='Кнопка не найденаю'
         )
     return db_button_id
+
+
+async def check_user_username_duplicate(
+    email: str,
+    session: AsyncSession,
+) -> None:
+    """Валидация имени пользователя на наличие дубликатов."""
+    user_id = await user_crud.get_user_id_by_email(
+        email=email, session=session
+    )
+    if user_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail='Пользователь с таким email уже существует.'
+        )
+
+
+async def check_user_exists(
+    email: str,
+    session: AsyncSession,
+) -> User:
+    user = await user_crud.get_user_by_email(
+        email=email, session=session
+    )
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='Пользователь с таким username не найден.'
+        )
+    return user

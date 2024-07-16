@@ -79,7 +79,6 @@ async def get_button_detail(request: Request,
                                       )
 
 
-# test ok
 @router.post(
     '/{button_id}',
     response_class=HTMLResponse

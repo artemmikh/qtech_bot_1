@@ -107,7 +107,6 @@ async def get_button_detail_by_id(
     return button_detail
 
 
-# test ok
 @router.delete(
     '/api/{button_id}',
     response_model=ButtonDatabase,

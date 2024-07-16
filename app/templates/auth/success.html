@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Success Page</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css">
+</head>
+  </head>
+  <body>
+    <div class="container mt-5">
+      <div class="alert alert-success" role="alert">
+        <h4 class="alert-heading">Success!</h4>
+        {% if message %}
+          <p>{{ message }}</p>
+        {% endif%}
+        <hr>
+        {% if redirect_message %}
+          <p class="mb-0">{{ redirect_message }}</p>
+        {% endif%}
+      </div>
+        {% if (redirect_to, redirect_button) %}
+          <a href = {{ redirect_to }} class="btn btn-primary" >{{ redirect_button }}</a>
+        {% endif%}
+    </div>
+  </body>
+</html>
