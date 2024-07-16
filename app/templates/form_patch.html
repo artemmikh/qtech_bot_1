@@ -92,6 +92,52 @@
   </form>
 </div>
 
+{% if context.picture %}
+<div class="container my-5 d-flex justify-content-center">
+  <div class="form-horizontal card col-8">
+    <p>
+    <h4>Удаление картинок
+            <span class="info-icon" data-toggle="tooltip"
+              title="Удаление картинки">ℹ️</span>
+    </h4>
+    <br>
+      {% for pic in context.picture %}
+      <form action= "{{ url_for('del_button_picture', button_id=context.id, picture=pic.split('\\')[-1]) }}" method=post>
+        <button class="test" type="submit" value="Submit"><img src="/static/general/bin.png" style="width:25%"></button>
+        <img src={{pic}} alt="Picture" width=20% class="img-thumbnail">
+      </form>
+      {% endfor %}
+    </p>
+  </div>
+</div>
+{% endif %}
+
+{% if context.file %}
+  <div class="container my-5 d-flex justify-content-center">
+    <div class="form-horizontal card col-8">
+      <div class="form-group">
+        <p>
+          <h4>Удаление файла
+                  <span class="info-icon" data-toggle="tooltip" title="Удаление файла">ℹ️</span>
+          </h4>
+            <div class="row g-4 py-5 row-cols-1 row-cols-lg-3">
+            {% for doc in context.file %}
+            <form action= "{{ url_for('del_button_file', button_id=context.id, file=doc.split('\\')[-1]) }}" method=post>
+              <a href="{{doc}}" >
+                {{ doc.split('\\')[-1] }}
+              </a>
+              <button class="test" type="submit" value="Submit"><img src="/static/general/bin.png" style="width:25%"></button>
+            </form>
+            {% endfor %}
+          </div>
+          </p>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+
+
 <script src="/static/ckeditor/build/ckeditor.js"></script>
 
 <script>
