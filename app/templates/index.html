@@ -8,6 +8,7 @@
     <tr>
       <th>Название кнопки</th>
       <th>Для московского офиса</th>
+      <th>Кнопка отдела</th>
       <th>Активирована</th>
       <th></th>
       <th></th>
@@ -19,6 +20,7 @@
     <tr>
       <td class="col-md-2"><a href="/{{item.id}}">{{ item.name }}</a></td>
       <td class="col-md-2">{{ "Да" if item.is_moscow else "Нет" }}</td>
+      <td class="col-md-2">{{ "Да" if item.is_department else "Нет" }}</td>
       <td class="col-md-2">{{ "Да" if item.is_active else "Нет" }}</td>
       <td class="col-md-2" align="center"><a href="...">
         <img src="static/general/bin.png" style="width:15%"></a>
