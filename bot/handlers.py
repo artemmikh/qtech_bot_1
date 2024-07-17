@@ -22,10 +22,7 @@ def clean_unsupported_tags_from_html(text):
 
 def start_handler(update, context):
     """Обработчик команды /start"""
-    print('*' * 100)
-    print('start_handler')
     query = update.callback_query
-    print(update.callback_query)
     if query:
         query.answer()
 
@@ -40,7 +37,7 @@ def start_handler(update, context):
             callback_data=OLD_EMPLOYEE)]
     ]
 
-    text = 'Для начала, расскажите, вы новый сотрудник или уже давно с нами?'
+    text = 'Для начала расскажите, вы новый сотрудник или уже давно с нами?'
     message = update.effective_message
     reply_markup = InlineKeyboardMarkup(keyboard)
     if query:
@@ -50,8 +47,6 @@ def start_handler(update, context):
 
 
 def moscow_office_handler(update, context):
-    print('*' * 100)
-    print('moscow_office_handler')
     """Обработчик кнопок про Москву"""
     query = update.callback_query
     query.answer()
@@ -84,8 +79,6 @@ def moscow_office_handler(update, context):
 
 def info_buttons_handler(update, context):
     """Обработчик нажатия кнопок"""
-    print('*' * 100)
-    print('info_buttons_handler')
     query = update.callback_query
     query.answer()
     context.user_data['previous'] = 'moscow_office_handler'
@@ -132,8 +125,6 @@ def info_buttons_handler(update, context):
 
 def department_button_handler(update, context):
     """Обработчик кнопки 'К кому обращаться?'"""
-    print('*' * 100)
-    print('department_button_handler')
     query = update.callback_query
     query.answer()
     context.user_data['previous'] = 'info_buttons_handler'
@@ -171,8 +162,6 @@ def department_button_handler(update, context):
 
 def button_text_picture_doc_handler(update, context):
     """Обработчик вывода текста кнопки и прикрепленной картинки и/или документа"""
-    print('*' * 100)
-    print('button_text_picture_doc_handler')
     query = update.callback_query
     query.answer()
     button_id = int(query.data.split('_')[1])
