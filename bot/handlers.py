@@ -1,6 +1,6 @@
 import re
 
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ParseMode
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ParseMode, TelegramError
 
 from utils import form_media_group, delete_messages_from_chat
 from const import NEW_EMPLOYEE, OLD_EMPLOYEE, MOSCOW_NO, MOSCOW_YES
@@ -25,9 +25,9 @@ def start_handler(update, context):
     query = update.callback_query
     if query:
         query.answer()
-    
+
     context = delete_messages_from_chat(update, context)
-   
+
     keyboard = [
         [InlineKeyboardButton(
             'Я новый сотрудник',
@@ -117,8 +117,7 @@ def info_buttons_handler(update, context):
              'Предлагаем вам ознакомиться с меню '
              'и выбрать интересующую категорию',
         reply_markup=reply_markup)
-    
-    
+
 
 def department_button_handler(update, context):
     """Обработчик кнопки 'К кому обращаться?'"""
@@ -193,14 +192,17 @@ def button_text_picture_doc_handler(update, context):
         docs = context.bot.send_media_group(chat_id=update.effective_chat.id, media=media_group)
         for doc in docs:
             ids.append(doc.message_id)
-            
+
     try:
-        context.bot.delete_message(chat_id=update.effective_chat.id, message_id=query.message['message_id']) # удаляем клавиатуру
+        context.bot.delete_message(chat_id=update.effective_chat.id,
+                                   message_id=query.message['message_id'])
     except TelegramError:
+        print(1)
         pass
-    context.bot.send_message(chat_id=update.effective_chat.id, text=message, reply_markup=reply_markup)  
-    context.user_data['pics_or_docs_ids'] = ids # отдаем id сообщений в контекст, чтоб получить к ним доступ и удалить в других хэндлерах
-    
+    context.bot.send_message(chat_id=update.effective_chat.id, text=message, reply_markup=reply_markup,
+                             parse_mode=ParseMode.HTML)
+    context.user_data[
+        'pics_or_docs_ids'] = ids
 
 
 def back_to_previous_handler(update, context):
