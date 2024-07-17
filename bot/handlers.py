@@ -102,10 +102,12 @@ def info_buttons_handler(update, context):
 
     if query.data == MOSCOW_YES or context_office_choice == 'yes':
         buttons = session.query(Button).filter_by(is_moscow=True,
-                                                  is_department=False).all()
+                                                  is_department=False,
+                                                  is_active=True).all()
     elif query.data == MOSCOW_NO or context_office_choice == 'no':
         buttons = session.query(Button).filter_by(is_moscow=False,
-                                                  is_department=False).all()
+                                                  is_department=False,
+                                                  is_active=True).all()
 
     keyboard = [
         [InlineKeyboardButton(button.name, callback_data=f'button_{button.id}')]
@@ -145,11 +147,13 @@ def department_button_handler(update, context):
     if office_choice and office_choice == 'yes' or context.user_data.get('office_choice') == 'yes':
         context.user_data['office_choice'] = 'yes'
         buttons = session.query(Button).filter_by(is_moscow=True,
-                                                  is_department=True).all()
+                                                  is_department=True,
+                                                  is_active=True).all()
     elif office_choice == 'no' or context.user_data.get('office_choice') == 'no':
         context.user_data['office_choice'] = 'no'
         buttons = session.query(Button).filter_by(is_moscow=False,
-                                                  is_department=True).all()
+                                                  is_department=True,
+                                                  is_active=True).all()
 
     keyboard = [
         [InlineKeyboardButton(button.name, callback_data=f'button_{button.id}')]
@@ -172,7 +176,7 @@ def button_text_picture_doc_handler(update, context):
     query = update.callback_query
     query.answer()
     button_id = int(query.data.split('_')[1])
-    button = session.query(Button).filter_by(id=button_id).one_or_none()
+    button = session.query(Button).filter_by(id=button_id, is_active=True).one_or_none()
 
     if not button:
         query.edit_message_text(text='Ошибка: кнопка не найдена.')
