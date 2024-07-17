@@ -56,7 +56,7 @@ async def post_button_form(
         request: Request,
         name: str = Form(...),
         is_moscow: bool = Form(...),
-        text: str = Form(None),
+        text: str = Form(''),
         is_department: bool = Form(...),
         is_active: bool = Form(...),
         file_pic: list[UploadFile] = None,
