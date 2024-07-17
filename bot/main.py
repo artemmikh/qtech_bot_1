@@ -19,7 +19,7 @@ def setup_handlers(dispatcher):
     dispatcher.add_handler(CallbackQueryHandler(moscow_office_handler, pattern='^(new_employee|old_employee)$'))
     dispatcher.add_handler(CallbackQueryHandler(info_buttons_handler, pattern='^(moscow_yes|moscow_no)$'))
     dispatcher.add_handler(CallbackQueryHandler(button_text_picture_doc_handler, pattern='^button_\\d+$'))
-    dispatcher.add_handler(CallbackQueryHandler(department_button_handler, pattern='^department_button$'))
+    dispatcher.add_handler(CallbackQueryHandler(department_button_handler, pattern='^department_button[a-z_]+$'))
     dispatcher.add_handler(CallbackQueryHandler(start_handler, pattern='to_start'))
     dispatcher.add_handler(CallbackQueryHandler(back_to_previous_handler, pattern='^to_previous$'))
     dispatcher.add_handler(MessageHandler(Filters.all, message_handler))
