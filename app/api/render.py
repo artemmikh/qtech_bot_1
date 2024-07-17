@@ -175,6 +175,7 @@ async def update_button_form(
         is_active: bool = Form(...),
         file_pic: list[UploadFile] = None,
         file_doc: list[UploadFile] = None,
+        user: User = Depends(get_current_user_from_token),
         session: AsyncSession = Depends(get_async_session),
 ):
     form = ButtonForm(request)
