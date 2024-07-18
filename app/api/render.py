@@ -85,6 +85,7 @@ async def post_button_form(
             'is_active': is_active,
             'file_pic': file_pic,
             'file_doc': file_doc,
+            'user': user,
         }
         return templates.TemplateResponse("form.html", {"request": request,
                                                         "errors": errors,
