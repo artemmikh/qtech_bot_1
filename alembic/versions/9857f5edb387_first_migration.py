@@ -30,8 +30,7 @@ def upgrade():
                     sa.Column('is_department', sa.Boolean(), nullable=True),
                     sa.Column('is_active', sa.Boolean(), nullable=True),
                     sa.Column('created_date', sa.DateTime(), nullable=True),
-                    sa.PrimaryKeyConstraint('id'),
-                    sa.UniqueConstraint('name')
+                    sa.PrimaryKeyConstraint('id')
                     )
     # ### end Alembic commands ###
 

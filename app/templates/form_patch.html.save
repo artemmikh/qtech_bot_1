@@ -5,7 +5,7 @@
 <div class="container my-5 d-flex justify-content-center">
   <form class="form-horizontal card col-8" method="POST" enctype="multipart/form-data">
     <div class="card-header">
-      <h3>Создание информационной кнопки</h3>
+      <h3>Редактирование информационной кнопки</h3>
     </div>
 
     <br>
@@ -26,7 +26,7 @@
     <div class="form-group">
       <label for="name">Название кнопки:</label>
       <input type="text" class="form-control col-sm-12 invalidInput" name="name" id="name" placeholder="Название кнопки"
-             value="{{context.name}}" required/>
+             value="{{ context.name }}" required/>
     </div>
 
     <div class="form-group">
@@ -35,8 +35,8 @@
               title="Если вы выберете «Да», кнопка будет видна только тем сотрудникам, которые в интерфейсе телеграм бота отметили, что посещают офис в Москве">ℹ️</span>
       </label>
       <select class="form-control" name="is_moscow" id="is_moscow">
-        <option value="True">Да</option>
-        <option value="False">Нет</option>
+        <option value="True" {% if context.is_moscow %} selected {% endif %}>Да</option>
+        <option value="False" {% if not context.is_moscow %} selected {% endif %}>Нет</option>
       </select>
     </div>
 
@@ -46,8 +46,8 @@
               title="В телеграм боте есть кнопка «К кому обращаться?». Созданная кнопка попадёт в этот раздел, если вы выберете «Да»">ℹ️</span>
       </label>
       <select class="form-control" name="is_department" id="is_department">
-        <option value="True">Да</option>
-        <option value="False">Нет</option>
+        <option value="True" {% if context.is_department %} selected {% endif %}>Да</option>
+        <option value="False" {% if not context.is_department %} selected {% endif %}>Нет</option>
       </select>
     </div>
 
@@ -56,7 +56,7 @@
         <span class="info-icon" data-toggle="tooltip"
               title="Пользователь увидит этот текст, когда нажмет на кнопку">ℹ️</span>
       </label>
-      <textarea class="form-control" name="text" id="text" placeholder="">{{context.text}}</textarea>
+      <textarea class="form-control" name="text" id="text" placeholder="">{{ context.text }}</textarea>
     </div>
 
     <div class="form-group">
@@ -65,8 +65,8 @@
               title="Это поле нужно для того чтобы ограничить попадание кнопки в телеграм бота. Если вы выберете «Нет», кнопка не отобразится в боте, но будет доступна в админ-зоне для редактирования">ℹ️</span>
       </label>
       <select class="form-control" name="is_active" id="is_active">
-        <option value="True">Да</option>
-        <option value="False">Нет</option>
+        <option value="True" {% if context.is_active %} selected {% endif %}>Да</option>
+        <option value="False" {% if not context.is_active %} selected {% endif %}>Нет</option>
       </select>
     </div>
 
@@ -92,20 +92,64 @@
   </form>
 </div>
 
+{% if context.picture %}
+<div class="container my-5 d-flex justify-content-center">
+  <div class="form-horizontal card col-8">
+    <p>
+    <h4>Удаление картинок
+            <span class="info-icon" data-toggle="tooltip"
+              title="Удаление картинки">ℹ️</span>
+    </h4>
+    <br>
+      {% for pic in context.picture %}
+      <form action="{{ url_for('del_button_picture', button_id=context.id, picture=pic.split('\\')[-1]) }}" method="post">
+
+        <button class="test" type="submit" value="Submit"><img src="/static/general/bin.png" style="width:25%"></button>
+        <img src={{pic}} alt="Picture" width=20% class="img-thumbnail">
+      </form>
+      {% endfor %}
+    </p>
+  </div>
+</div>
+{% endif %}
+
+{% if context.file %}
+  <div class="container my-5 d-flex justify-content-center">
+    <div class="form-horizontal card col-8">
+      <div class="form-group">
+        <p>
+          <h4>Удаление файла
+                  <span class="info-icon" data-toggle="tooltip" title="Удаление файла">ℹ️</span>
+          </h4>
+            <div class="row g-4 py-5 row-cols-1 row-cols-lg-3">
+            {% for doc in context.file %}
+            <form action= "{{ url_for('del_button_file', button_id=context.id, file=doc.split('\\')[-1]) }}" method=post>
+              <a href="{{doc}}" >
+                {{ doc.split('\\')[-1] }}
+              </a>
+              <button class="test" type="submit" value="Submit"><img src="/static/general/bin.png" style="width:25%"></button>
+            </form>
+            {% endfor %}
+          </div>
+          </p>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+
+
 <script src="/static/ckeditor/build/ckeditor.js"></script>
 
 <script>
   ClassicEditor
     .create(document.querySelector('#text'))
+    .then(editor => {
+      editor.setData('{{ context.text | safe }}');
+    })
     .catch(error => {
       console.error(error);
     });
-
-  $(function () {
-    $('[data-toggle="tooltip"]').tooltip({
-      delay: {"show": 100, "hide": 10}
-    });
-  });
 </script>
 
 {% endblock %}
