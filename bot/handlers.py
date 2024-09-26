@@ -223,7 +223,7 @@ def button_text_picture_doc_handler(update, context):
         pass
     
     
-    lora_bot.event('текст с документом или картинкой', 'конечный документ/каринка', update.callback_query.message.chat.id)
+    lora_bot.event('текст с документом или картинкой', 'конечный документ/картинка', update.callback_query.message.chat.id)
     lora_bot.message(f'{message[:45]}...', 'text+file+back_menu', update.callback_query.message.chat.id)
     context.bot.send_message(chat_id=update.effective_chat.id, text=message, reply_markup=reply_markup,
                              parse_mode=ParseMode.HTML)
@@ -282,11 +282,11 @@ def analytics(update, context):
     query = update.callback_query
     menu_analytics = ['Total', 'Users', 'Messages', 'Events']
     if query.data in menu_analytics:
-        text = (
-            "Set date if you need(start and end date splitting by space in "
-            "format 'YYYY-MM-DD') or select no on menu"
-        )
-        keyboard = [[InlineKeyboardButton('No',callback_data='No_Date')],]
+        # text = ("Set date if you need(start and end date splitting by space in "
+        #     "format 'YYYY-MM-DD') or select no on menu")
+        text = ('Здесь можно расположить выбор start end даты периода аналитики. '
+                'Пока по всем.')
+        keyboard = [[InlineKeyboardButton('ОК',callback_data='No_Date')],]
         no_markup = reply_markup = InlineKeyboardMarkup(keyboard)
         query.edit_message_text(text=text,reply_markup=no_markup)
         user_analytics[update.effective_chat.id] = {}
@@ -299,11 +299,11 @@ def analytics(update, context):
 def analytics_date(update, context):
     query = update.callback_query
     query.answer() 
-
-    text = ("Set message or event type (only this one has types) or "
-            "select no on menu"
-    )
-    keyboard = [[InlineKeyboardButton('No',callback_data='No_Type')],]
+#    text = ("Set message or event type (only this one has types) or "
+#            "select no on menu")
+    text = ('Здесь можно расположить меню выбора типа message или event. '
+            'Пока по всем.')
+    keyboard = [[InlineKeyboardButton('OK',callback_data='No_Type')],]
     no_markup = reply_markup = InlineKeyboardMarkup(keyboard)
     if  query.data == 'No_Date':
         user_analytics[update.effective_chat.id]['start_date'] = None
@@ -391,11 +391,15 @@ def analytics_type(update, context):
                                                      user_analytics[update.effective_chat.id]['end_date'])
         context.bot.sendPhoto(
             chat_id=update.effective_chat.id, photo=photo,)
-        # photo, info = lora_bot.analyze_messages_funnel(type_of_message,
-        #                                                user_analytics[update.effective_chat.id]['start_date'],
-        #                                                user_analytics[update.effective_chat.id]['end_date'])
-        # context.bot.sendPhoto(
-        #     chat_id=update.effective_chat.id, photo=photo,)
+        photo, info = lora_bot.analyze_messages_funnel(
+            ['/start',
+             'Здорово, что вы присоединились к чат-боту! Он...',
+             'Добро пожаловать в ГК QTECH!! Этот чат-бот по...',
+            ],
+                                                       user_analytics[update.effective_chat.id]['start_date'],
+                                                       user_analytics[update.effective_chat.id]['end_date'])
+        context.bot.sendPhoto(
+            chat_id=update.effective_chat.id, photo=photo,)
         message.reply_text(text=info, reply_markup=reply_markup)
     elif user_analytics[update.effective_chat.id]['analytics_type'] == 'Events':
         photo, info = lora_bot.analyze_events_number(user_analytics[update.effective_chat.id]['start_date'],
@@ -411,9 +415,9 @@ def analytics_type(update, context):
                                                    user_analytics[update.effective_chat.id]['end_date'])
         context.bot.sendPhoto(
             chat_id=update.effective_chat.id, photo=photo,)
-        # photo, info = lora_bot.analyze_events_funnel(['Menu received', 'Make order', 'Buy'],
-        #                                              user_analytics[update.effective_chat.id]['start_date'],
-        #                                              user_analytics[update.effective_chat.id]['end_date'])
-        # context.bot.sendPhoto(
-        #     chat_id=update.effective_chat.id, photo=photo, caption=info)
+        photo, info = lora_bot.analyze_events_funnel(['старт.меню', 'текст с документом или картинкой'],
+                                                     user_analytics[update.effective_chat.id]['start_date'],
+                                                     user_analytics[update.effective_chat.id]['end_date'])
+        context.bot.sendPhoto(
+            chat_id=update.effective_chat.id, photo=photo, caption=info)
         message.reply_text(text=info, reply_markup=reply_markup)
