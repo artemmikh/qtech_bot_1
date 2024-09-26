@@ -9,7 +9,7 @@ from handlers import (
     start_handler, moscow_office_handler, info_buttons_handler,
     back_to_previous_handler, button_text_picture_doc_handler,
     message_handler, department_button_handler, analytics,
-    analytics_date,
+    analytics_date, analytics_type
 )
 
 load_dotenv()
@@ -31,6 +31,7 @@ def setup_handlers(dispatcher):
         )
     )
     dispatcher.add_handler(CallbackQueryHandler(analytics_date, pattern='^No_Date$'))
+    dispatcher.add_handler(CallbackQueryHandler(analytics_type, pattern='^No_Type$'))
     dispatcher.add_handler(MessageHandler(Filters.all, message_handler))
 
 

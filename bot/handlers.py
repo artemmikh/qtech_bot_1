@@ -9,6 +9,7 @@ from db import session, Button
 
 
 lora_bot = LoraBot('TG_BOT_NAME')
+type_of_message = ['command','text+file+back_menu','text+menu','warning+back_menu','кнопка назад']
 user_analytics = {}
 
 
@@ -289,7 +290,7 @@ def analytics(update, context):
         no_markup = reply_markup = InlineKeyboardMarkup(keyboard)
         query.edit_message_text(text=text,reply_markup=no_markup)
         user_analytics[update.effective_chat.id] = {}
-        user_analytics[update.effective_chat.id]['analytics_type'] = query.message.text
+        user_analytics[update.effective_chat.id]['analytics_type'] = query.data
     else:
         keyboard = [[InlineKeyboardButton('В начало', callback_data='to_start'),],]
         reply_markup = InlineKeyboardMarkup(keyboard)
@@ -298,17 +299,121 @@ def analytics(update, context):
 def analytics_date(update, context):
     query = update.callback_query
     query.answer() 
+
+    text = ("Set message or event type (only this one has types) or "
+            "select no on menu"
+    )
+    keyboard = [[InlineKeyboardButton('No',callback_data='No_Type')],]
+    no_markup = reply_markup = InlineKeyboardMarkup(keyboard)
     if  query.data == 'No_Date':
         user_analytics[update.effective_chat.id]['start_date'] = None
         user_analytics[update.effective_chat.id]['end_date'] = None
         print ('No_Date')
-#        bot.send_message(message.chat.id, "Set message or event type (only this one has types) or select no on menu", reply_markup=no_markup)
+        query.edit_message_text(text=text,reply_markup=no_markup)
     elif len(query.message.text.split(' ')) == 2:
         date = query.message.text.split(' ')
         user_analytics[update.effective_chat.id]['start_date'] = date[0]
         user_analytics[update.effective_chat.id]['end_date'] = date[1]
-#        bot.send_message(message.chat.id, "Set message or event type (only this one has types) or select no on menu", reply_markup=no_markup)
+        query.edit_message_text(text=text,reply_markup=no_markup)
     else:
         keyboard = [[InlineKeyboardButton('В начало', callback_data='to_start'),],]
         reply_markup = InlineKeyboardMarkup(keyboard)
         query.edit_message_text(text='Error', reply_markup=reply_markup)
+
+
+def analytics_type(update, context):
+    """Колбэк для выбора типа аналитики."""
+
+    print('---Колбэк для выбора типа аналитики.--') 
+
+    query = update.callback_query
+    query.answer() 
+    keyboard = [[InlineKeyboardButton('В начало', callback_data='to_start'),],]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    message = update.effective_message
+    if query.data == 'No_Type':
+        user_analytics[update.effective_chat.id]['type'] = None
+    else:
+        # TO DO
+        user_analytics[update.effective_chat.id]['type'] = query.message.text
+
+    if user_analytics[update.effective_chat.id]['analytics_type'] == 'Total':
+        info = lora_bot.analyze_total(user_analytics[update.effective_chat.id]['start_date'],
+                                                user_analytics[update.effective_chat.id]['end_date'])
+        query.edit_message_text(text=info, reply_markup=reply_markup)
+    elif user_analytics[update.effective_chat.id]['analytics_type'] == 'Users':
+        photo, info = lora_bot.analyze_new_user(user_analytics[update.effective_chat.id]['start_date'],
+                                                user_analytics[update.effective_chat.id]['end_date'])
+        context.bot.sendPhoto(
+            chat_id=update.effective_chat.id, photo=photo, caption=info)
+        photo, info = lora_bot.analyze_user_number_accumulation(user_analytics[update.effective_chat.id]['start_date'],
+                                                                user_analytics[update.effective_chat.id]['end_date'])
+        context.bot.sendPhoto(
+            chat_id=update.effective_chat.id, photo=photo, caption=info)
+        photo = lora_bot.analyze_hour_activity(user_analytics[update.effective_chat.id]['start_date'],
+                                                     user_analytics[update.effective_chat.id]['end_date'])
+        context.bot.sendPhoto(
+            chat_id=update.effective_chat.id, photo=photo, caption=info)
+        photo, info = lora_bot.analyze_dau(user_analytics[update.effective_chat.id]['start_date'],
+                                           user_analytics[update.effective_chat.id]['end_date'])
+        context.bot.sendPhoto(
+            chat_id=update.effective_chat.id, photo=photo, caption=info)
+        photo, info = lora_bot.analyze_wau(user_analytics[update.effective_chat.id]['start_date'],
+                                           user_analytics[update.effective_chat.id]['end_date'])
+        context.bot.sendPhoto(
+            chat_id=update.effective_chat.id, photo=photo, caption=info)
+        photo, info = lora_bot.analyze_mau(user_analytics[update.effective_chat.id]['start_date'],
+                                           user_analytics[update.effective_chat.id]['end_date'])
+        context.bot.sendPhoto(
+            chat_id=update.effective_chat.id, photo=photo, caption=info)
+        photo, info = lora_bot.analyze_yau(user_analytics[update.effective_chat.id]['start_date'],
+                                           user_analytics[update.effective_chat.id]['end_date'])
+        context.bot.sendPhoto(
+            chat_id=update.effective_chat.id, photo=photo, caption=info)
+        photo, info = lora_bot.analyze_language(user_analytics[update.effective_chat.id]['start_date'],
+                                                user_analytics[update.effective_chat.id]['end_date'])
+        context.bot.sendPhoto(
+            chat_id=update.effective_chat.id, photo=photo,)
+        message.reply_text(text=info, reply_markup=reply_markup)
+
+    elif user_analytics[update.effective_chat.id]['analytics_type'] == 'Messages':
+
+        photo, info = lora_bot.analyze_messages_number(user_analytics[update.effective_chat.id]['start_date'],
+                                                       user_analytics[update.effective_chat.id]['end_date'],
+                                                       user_analytics[update.effective_chat.id]['type'])
+        context.bot.sendPhoto(
+            chat_id=update.effective_chat.id, photo=photo, caption=info)
+        info = lora_bot.analyze_messages(user_analytics[update.effective_chat.id]['start_date'],
+                                                user_analytics[update.effective_chat.id]['end_date'],
+                                                user_analytics[update.effective_chat.id]['type'])
+        message.reply_text(text=info, reply_markup=None)
+        photo, info = lora_bot.analyze_messages_type(user_analytics[update.effective_chat.id]['start_date'],
+                                                     user_analytics[update.effective_chat.id]['end_date'])
+        context.bot.sendPhoto(
+            chat_id=update.effective_chat.id, photo=photo,)
+        # photo, info = lora_bot.analyze_messages_funnel(type_of_message,
+        #                                                user_analytics[update.effective_chat.id]['start_date'],
+        #                                                user_analytics[update.effective_chat.id]['end_date'])
+        # context.bot.sendPhoto(
+        #     chat_id=update.effective_chat.id, photo=photo,)
+        message.reply_text(text=info, reply_markup=reply_markup)
+    elif user_analytics[update.effective_chat.id]['analytics_type'] == 'Events':
+        photo, info = lora_bot.analyze_events_number(user_analytics[update.effective_chat.id]['start_date'],
+                                                     user_analytics[update.effective_chat.id]['end_date'],
+                                                     user_analytics[update.effective_chat.id]['type'])
+        context.bot.sendPhoto(
+            chat_id=update.effective_chat.id, photo=photo, caption=info)
+        info = lora_bot.analyze_events(user_analytics[update.effective_chat.id]['start_date'],
+                                              user_analytics[update.effective_chat.id]['end_date'],
+                                              user_analytics[update.effective_chat.id]['type'])
+        message.reply_text(text=info, reply_markup=None)
+        photo, info = lora_bot.analyze_events_type(user_analytics[update.effective_chat.id]['start_date'],
+                                                   user_analytics[update.effective_chat.id]['end_date'])
+        context.bot.sendPhoto(
+            chat_id=update.effective_chat.id, photo=photo,)
+        # photo, info = lora_bot.analyze_events_funnel(['Menu received', 'Make order', 'Buy'],
+        #                                              user_analytics[update.effective_chat.id]['start_date'],
+        #                                              user_analytics[update.effective_chat.id]['end_date'])
+        # context.bot.sendPhoto(
+        #     chat_id=update.effective_chat.id, photo=photo, caption=info)
+        message.reply_text(text=info, reply_markup=reply_markup)
