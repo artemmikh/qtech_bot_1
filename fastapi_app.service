@@ -1,0 +1,13 @@
+[Unit]
+Description=Gunicorn instance to serve FastAPI application
+After=network.target
+
+[Service]
+User=qtech_bot_team
+Group=qtech_bot_team
+WorkingDirectory=/home/qtech_bot_team/qtech_bot_1
+ExecStart=/home/qtech_bot_team/qtech_bot_1/venv/bin/gunicorn -b 0.0.0.0:9000 -w 4 -k uvicorn.workers.UvicornWorker app.main:app
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

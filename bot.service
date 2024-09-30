@@ -1,0 +1,14 @@
+[Unit]
+Description=qbot daemon
+After=network.target
+
+[Service]
+User=qtech_bot_team
+Group=qtech_bot_team
+WorkingDirectory=/home/qtech_bot_team/qtech_bot_1
+ExecStart=/home/qtech_bot_team/qtech_bot_1/venv/bin/python /home/qtech_bot_team/qtech_bot_1/bot/main.py
+Restart=always
+Type=simple
+
+[Install]
+WantedBy=multi-user.target
