@@ -168,7 +168,7 @@ def department_button_handler(update, context):
         InlineKeyboardButton('В начало', callback_data='to_start')
     ])
     reply_markup = InlineKeyboardMarkup(keyboard)
-    text='Выберите отдел',
+    text='Выберите отдел'
     lora_bot.event('К кому обращаться?', 'выбор', update.callback_query.message.chat.id)
     lora_bot.message(f'{text[:45]}...', 'text+menu', update.callback_query.message.chat.id)
     query.edit_message_text(
