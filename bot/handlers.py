@@ -90,9 +90,6 @@ def info_buttons_handler(update, context):
 
     context_office_choice = context.user_data.get('office_choice')
 
-    print(f'query.data = {query.data}')
-    print(f'context.user_data.get("office_choice") = {context.user_data.get("office_choice")}')
-
     if query.data == MOSCOW_YES or context_office_choice == 'yes':
         buttons = session.query(Button).filter_by(is_moscow=True,
                                                   is_department=False,
@@ -108,8 +105,6 @@ def info_buttons_handler(update, context):
     ]
     keyboard.append([InlineKeyboardButton('К кому обращаться?',
                                           callback_data=f'department_button_moscow_{context.user_data["office_choice"]}')])
-    print('callback to department: ')                     
-    print(f'department_button_moscow_{context.user_data["office_choice"]}')
     keyboard.append([
         InlineKeyboardButton('Назад', callback_data='to_previous'),
         InlineKeyboardButton('В начало', callback_data='to_start')
@@ -128,8 +123,6 @@ def department_button_handler(update, context):
     query = update.callback_query
     query.answer()
     context.user_data['previous'] = 'info_buttons_handler'
-
-    print(query.data)
     if context.user_data.get('office_choice') == None:
         office_choice = query.data.split('_')[3]
     else:
@@ -203,7 +196,6 @@ def button_text_picture_doc_handler(update, context):
         context.bot.delete_message(chat_id=update.effective_chat.id,
                                    message_id=query.message['message_id'])
     except TelegramError:
-        print(1)
         pass
     context.bot.send_message(chat_id=update.effective_chat.id, text=message, reply_markup=reply_markup,
                              parse_mode=ParseMode.HTML)

@@ -1,60 +1,82 @@
+
 [![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)](https://www.python.org/)
 [![FastApi](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com/)
 
+# Telegram-бот для адаптации сотрудников с админ-зоной
+### Описание проекта
+Проект представляет собой Telegram-бот с административной панелью для управления. В интерфейсе бота пользователь может указать, посещает ли он московский офис. В зависимости от выбора, пользователю отображается список информационных кнопок. При нажатии на кнопки сотрудник получает необходимую информацию. 
 
-## Описание проекта
-Телеграм-бот адаптации и помощи сотрудникам российского разработчика IT-оборудования QTECH 
+Названия и содержимое кнопок загружаются из базы данных. Администратор может добавлять или изменять их через админ-зону.
 
-
-Запуск приложения
-/c/Dev/QtechBot
+Протестировать бота можно [по этой ссылке](https://t.me/test_qtech_bot).
 
 ### Запуск проекта
 
-Клонировать репозиторий и перейти в него в командной строке:
+1. Клонируйте репозиторий и перейдите в него в командной строке:
 
-```
-git clone 
-```
-Cоздать и активировать виртуальное окружение:
-
-```
-python3 -m venv venv
-```
-
-* Если у вас Linux/macOS
-
-    ```
-    source venv/bin/activate
+    ```bash
+    git clone git@github.com:artemmikh/qtech_bot_1.git
     ```
 
-* Если у вас windows
+2. Перейдите в директорию с кодом проекта и создайте виртуальное окружение:
 
+    ```bash
+    python3 -m venv venv
     ```
-    source venv/scripts/activate
+
+3. Активируйте виртуальное окружение:
+
+    * Для Linux/macOS:
+
+        ```bash
+        source venv/bin/activate
+        ```
+
+    * Для Windows:
+
+        ```bash
+        source venv/scripts/activate
+        ```
+
+4. Обновите менеджер пакетов `pip`:
+
+    ```bash
+    python -m pip install --upgrade pip
     ```
 
-Установить зависимости из файла requirements.txt:
+5. Установите зависимости из файла `requirements.txt`:
 
-```
-python3 -m pip install --upgrade pip
-```
+    ```bash
+    pip install -r requirements.txt
+    ```
 
-```
-pip install -r requirements.txt
-```
-Запустить локальный сервер:
-```
-uvicorn app.main:app --reload
-```
+6. В корне проекта создайте файл `.env` и добавьте в него следующие данные (замените `EXAMPLE_BOT_TOKEN` на ваш реальный токен):
+
+    ```bash
+    BOT_TOKEN=EXAMPLE_BOT_TOKEN
+    APP_TITLE=Админ-панель Qtech
+    DATABASE_URL=sqlite+aiosqlite:///./Qtech_bot.db
+    BOT_DATABASE_URL=sqlite:///../QTech_bot.db
+    SECRET=YOUR_SECRET
+    ```
+
+7. Примените миграции базы данных:
+
+    ```bash
+    alembic upgrade head
+    ```
+
+8. Запустите Telegram-бота:
+
+    ```bash
+    python bot/main.py
+    ```
+
+9. Запустите локальный сервер FastAPI:
+
+    ```bash
+    uvicorn app.main:app --reload
+    ```
+
 ### Документация
-После запуска докуметация будет доступно по ссылке 
-http://127.0.0.1:8000/docs
-
-
-### Команды alembic - справочно
-```
-alembic init --template async alembic
-alembic revision --autogenerate -m "First migration" 
-alembic upgrade head
-```
+После запуска документация будет доступна по [этой ссылке](http://127.0.0.1:8000/docs).

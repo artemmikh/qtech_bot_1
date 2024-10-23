@@ -1,6 +1,0 @@
-python-multipart
-fastapi-login
-passlib[bcrypt]
-python-jose
-rich
-EOF
