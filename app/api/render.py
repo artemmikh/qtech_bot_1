@@ -18,7 +18,7 @@ from app.models import User
 from app.utils.auxiliary import object_upload
 from app.forms.button import ButtonForm
 
-router = APIRouter(tags=['Render Bottons'])
+router = APIRouter(tags=['Render Buttons'])
 
 templates = Jinja2Templates(directory="app/templates")
 

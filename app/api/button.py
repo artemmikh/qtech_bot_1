@@ -13,7 +13,7 @@ from app.crud.button import button_crud
 from app.utils.auxiliary import object_upload, object_delete
 
 router = APIRouter(
-    tags=['API Bottons']
+    tags=['API Buttons']
 )
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/jwt/login")
 

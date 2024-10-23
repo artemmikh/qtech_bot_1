@@ -25,13 +25,13 @@ from app.schemas.user import UserCreate, UserRead, UserUpdate
 console = Console()
 
 templates = Jinja2Templates(directory="app/templates")
-router = APIRouter()
+router = APIRouter(tags=['Auth'])
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 router.include_router(
     fastapi_users.get_register_router(UserRead, UserCreate),
     prefix='/auth',
-    tags=['auth'],
+    tags=['Auth'],
 )
 
 
