@@ -27,20 +27,19 @@
     </div>
     {% endif %}
 
-    <div class="text-content">
+    <div class="text-content" style="clear: both; margin-top: 20px;">
       <p style="color:#16181b;">Текст по нажатию кнопки:</p>
       <p>{{ context.text | safe }}</p>
     </div>
-    <p>
+
     {% if context.file %}
-        <h4>Файлы</h4>
-        <ul class="list-group">
+    <h4>Файлы</h4>
+    <ul class="list-group">
         {% for doc in context.file %}
-            <li class="list-group-item"><a href="{{doc}}" > {{ doc.split('\\')[-1] }} </a></li>
+        <li class="list-group-item"><a href="{{doc}}" > {{ doc.split('\\')[-1] }} </a></li>
         {% endfor %}
-        </ul>
+    </ul>
     {% endif %}
-    </p>
 
 </div>
 {% endblock content %}
