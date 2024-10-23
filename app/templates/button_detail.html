@@ -27,9 +27,10 @@
     </div>
     {% endif %}
 
-    <p style="color:#16181b;">Текст по нажатию кнопки:</p>
-    <p>{{ context.text | safe }}</p>
-
+    <div class="text-content">
+      <p style="color:#16181b;">Текст по нажатию кнопки:</p>
+      <p>{{ context.text | safe }}</p>
+    </div>
     <p>
     {% if context.file %}
         <h4>Файлы</h4>

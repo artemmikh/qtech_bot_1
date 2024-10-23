@@ -11,7 +11,6 @@ from app.core.config import settings
 app = FastAPI(title=settings.app_title)
 templates = Jinja2Templates(directory="app/templates")
 
-
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
     if exc.detail == "Not authenticated":

@@ -26,7 +26,6 @@ def duplicate_name_check(file_root, filename):
 
 
 def object_delete(file_root, obj_str_to_delete):
-    for root in obj_str_to_delete.split(' '):
-        obj = root.split('\\')[-1]
-        del_root = os.path.join(file_root, obj)
-        os.remove(del_root)
+    file_path = os.path.join(file_root, obj_str_to_delete.strip('\\'))
+    if os.path.exists(file_path):
+        os.remove(file_path)

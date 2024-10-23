@@ -1,4 +1,5 @@
 import os
+import logging
 
 from fastapi import APIRouter, Request, Form, UploadFile, Depends, File
 from fastapi.templating import Jinja2Templates
@@ -127,7 +128,6 @@ async def update_button_form(request: Request,
 
     if context.picture:
         context.picture = context.picture.split(' ')
-
     if context.file:
         context.file = context.file.split(' ')
 
@@ -178,6 +178,7 @@ async def update_button_form(
                             status_code=status.HTTP_303_SEE_OTHER)
 
 
+
 @router.post(
     '/delete_picture/{button_id}/{picture}',
 )
@@ -193,7 +194,7 @@ async def del_button_picture(
 
     new_pic_list = []
     for pic_url in picture_list:
-        if picture != pic_url.split('\\')[-1]:
+        if picture != pic_url.split('/')[-1]:
             new_pic_list.append(pic_url)
 
     button.picture = ' '.join(new_pic_list)
@@ -222,7 +223,7 @@ async def del_button_file(
 
     new_file_list = []
     for file_url in file_list:
-        if file != file_url.split('\\')[-1]:
+        if file != file_url.split('/')[-1]:
             new_file_list.append(file_url)
 
     button.file = ' '.join(new_file_list)
@@ -234,7 +235,6 @@ async def del_button_file(
 
     return RedirectResponse(router.url_path_for('update_button_form', button_id=button_id),
                             status_code=status.HTTP_303_SEE_OTHER)
-
 
 @router.post(
     '/delete/{button_id}',

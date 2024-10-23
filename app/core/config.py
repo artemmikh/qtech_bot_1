@@ -6,7 +6,7 @@ from pydantic import BaseSettings
 
 class Settings(BaseSettings):
     app_title: str = 'Input title in .env'
-    database_url: str
+    database_url: str = 'sqlite+aiosqlite:///./Qtech_bot.db'
     BASE_DIR = Path(__file__).resolve().parent.parent
     STATIC_ROOT = os.path.join(BASE_DIR, 'static')
     MEDIA_ROOT = os.path.join(STATIC_ROOT, 'media')
